@@ -129,12 +129,28 @@ export function ChatInterface({ currentUserRole, currentUserId }: ChatInterfaceP
             } as Message));
             setMessages(msgs);
             scrollToBottom();
-
-            // Mark as read logic would go here (updateDoc 'read' = true)
         });
 
+        // Mark conversation as read when opened
+        const markAsRead = async () => {
+            try {
+                const convRef = doc(db, 'conversations', activeConversationId);
+                const convSnap = await getDoc(convRef);
+                if (convSnap.exists()) {
+                    const data = convSnap.data();
+                    // Only reset if I'm not the last sender (meaning I have unread messages)
+                    if (data.lastSenderId !== currentUserId && data.unreadCount > 0) {
+                        await updateDoc(convRef, { unreadCount: 0 });
+                    }
+                }
+            } catch (error) {
+                console.error('Error marking as read:', error);
+            }
+        };
+        markAsRead();
+
         return () => unsubscribe();
-    }, [activeConversationId]);
+    }, [activeConversationId, currentUserId]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -259,34 +275,30 @@ export function ChatInterface({ currentUserRole, currentUserId }: ChatInterfaceP
     });
 
     return (
-        <div className="flex flex-col md:flex-row h-[calc(100dvh-100px)] sm:h-[calc(100vh-120px)] w-full bg-white sm:rounded-2xl sm:border border-gray-200 sm:shadow-lg overflow-hidden">
+        <div className="flex flex-col md:flex-row h-[calc(100dvh-100px)] sm:h-[calc(100vh-120px)] w-full bg-white rounded-xl border border-gray-200 overflow-hidden">
             {/* Sidebar / Conversation List */}
             <div className={cn(
-                "w-full md:w-80 lg:w-96 border-r border-gray-200 flex flex-col bg-white",
+                "w-full md:w-72 lg:w-80 border-r border-gray-200 flex flex-col",
                 mobileShowChat ? "hidden md:flex" : "flex"
             )}>
-                {/* Sidebar Header */}
-                <div className="p-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 overflow-hidden cursor-pointer">
-                        <div className="flex items-center justify-center h-full w-full bg-gray-300 text-gray-500 font-bold">
-                            {currentUserRole === 'admin' ? 'A' : 'R'}
-                        </div>
-                    </div>
-                    <div className="flex gap-4 text-gray-500">
-                        <button className="p-2 hover:bg-gray-200 rounded-full transition-colors"><MoreVertical className="h-5 w-5" /></button>
-                    </div>
+                {/* Header */}
+                <div className="p-3 border-b border-gray-100 flex items-center justify-between">
+                    <h2 className="font-semibold text-gray-900 text-sm">Messages</h2>
+                    <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                        <MoreVertical className="h-4 w-4 text-gray-500" />
+                    </button>
                 </div>
 
-                {/* Search Bar */}
-                <div className="p-2 border-b border-gray-200 bg-white">
+                {/* Search */}
+                <div className="p-2 border-b border-gray-100">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Rechercher une discussion"
+                            placeholder="Rechercher..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-1.5 bg-gray-100 border-none rounded-lg text-sm focus:ring-1 focus:ring-[#00a884] transition-all placeholder:text-gray-500"
+                            className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-all"
                         />
                     </div>
                 </div>
@@ -301,45 +313,43 @@ export function ChatInterface({ currentUserRole, currentUserId }: ChatInterfaceP
                                 setMobileShowChat(true);
                             }}
                             className={cn(
-                                "flex items-center gap-3 p-3 cursor-pointer transition-colors border-b border-gray-100 hover:bg-gray-50",
-                                activeConversationId === conv.id ? "bg-gray-100" : "bg-white"
+                                "flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-colors border-b border-gray-50",
+                                activeConversationId === conv.id ? "bg-primary-50" : "hover:bg-gray-50"
                             )}
                         >
-                            <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold shrink-0 text-xl overflow-hidden">
+                            <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-xs font-medium shrink-0">
                                 {currentUserRole === 'admin' && conv.participantDetails ?
                                     (conv.participantDetails.firstName?.[0] || 'U') :
-                                    <Shield className="h-6 w-6 text-gray-500" />
+                                    <Shield className="h-4 w-4 text-gray-400" />
                                 }
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="font-medium text-gray-900 truncate text-base">
+                                    <span className="font-medium text-gray-900 truncate text-sm">
                                         {currentUserRole === 'admin' ?
-                                            (conv.participantDetails ? `${conv.participantDetails.firstName} ${conv.participantDetails.lastName}` : 'Utilisateur inconnu') :
+                                            (conv.participantDetails ? `${conv.participantDetails.firstName} ${conv.participantDetails.lastName}` : 'Inconnu') :
                                             'Administration'
                                         }
-                                    </h3>
-                                    <span className="text-[11px] text-gray-400">
+                                    </span>
+                                    <span className="text-[10px] text-gray-400">
                                         {conv.lastMessageTime?.toDate ? conv.lastMessageTime.toDate().toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
                                     </span>
                                 </div>
-                                <p className="text-sm text-gray-500 truncate flex items-center gap-1 mt-0.5">
-                                    {conv.unreadCount > 0 && <span className="h-2 w-2 rounded-full bg-[#00a884] inline-block" />}
-                                    {conv.lastMessage}
-                                </p>
+                                <p className="text-xs text-gray-500 truncate mt-0.5">{conv.lastMessage}</p>
                             </div>
+                            {conv.unreadCount > 0 && <span className="h-2 w-2 rounded-full bg-primary-500 shrink-0" />}
                         </div>
                     ))}
 
                     {filteredConversations.length === 0 && (
-                        <div className="p-8 text-center">
-                            <p className="text-gray-400 text-sm">Aucune discussion</p>
+                        <div className="p-6 text-center">
+                            <p className="text-xs text-gray-400">Aucune discussion</p>
                             {currentUserRole === 'resident' && (
                                 <button
                                     onClick={createConversation}
-                                    className="mt-4 text-[#00a884] text-sm font-medium hover:underline"
+                                    className="mt-3 text-primary-600 text-xs font-medium hover:underline"
                                 >
-                                    Démarrer une conversation
+                                    Nouvelle conversation
                                 </button>
                             )}
                         </div>
@@ -349,71 +359,54 @@ export function ChatInterface({ currentUserRole, currentUserId }: ChatInterfaceP
 
             {/* Main Chat Window */}
             <div className={cn(
-                "flex-1 flex flex-col relative bg-[#EFEAE2]",
+                "flex-1 flex flex-col bg-gray-50",
                 !mobileShowChat ? "hidden md:flex" : "flex"
             )}>
-                {/* Decorative background pattern */}
-                <div className="absolute inset-0 opacity-40 pointer-events-none"
-                    style={{ backgroundImage: 'radial-gradient(circle, #d1d7db 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
-                </div>
-
                 {activeConversationId ? (
                     <>
                         {/* Chat Header */}
-                        <div className="p-2 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between shadow-sm z-10 shrink-0">
-                            <div className="flex items-center gap-3">
+                        <div className="px-3 py-2.5 bg-white border-b border-gray-200 flex items-center justify-between shrink-0">
+                            <div className="flex items-center gap-2.5">
                                 <button
-                                    className="md:hidden p-2 text-gray-600 hover:bg-gray-200 rounded-full"
+                                    className="md:hidden p-1.5 text-gray-500 hover:bg-gray-100 rounded-lg"
                                     onClick={() => setMobileShowChat(false)}
                                 >
-                                    <ArrowLeft className="h-5 w-5" />
+                                    <ArrowLeft className="h-4 w-4" />
                                 </button>
-                                <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold overflow-hidden">
-                                    {currentUserRole === 'admin' ? 'U' : <Shield className="h-5 w-5" />}
+                                <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-xs font-medium">
+                                    {currentUserRole === 'admin' ? 'U' : <Shield className="h-4 w-4" />}
                                 </div>
-                                <div className="flex flex-col">
-                                    <h3 className="font-semibold text-gray-900 text-sm leading-tight">
-                                        {currentUserRole === 'admin' ? 'Détails Résident' : 'Service Syndic'}
-                                    </h3>
-                                    <span className="text-xs text-gray-500">En ligne</span>
+                                <div>
+                                    <p className="font-medium text-gray-900 text-sm">
+                                        {currentUserRole === 'admin' ? 'Résident' : 'Administration'}
+                                    </p>
+                                    <p className="text-[10px] text-green-600">En ligne</p>
                                 </div>
-                            </div>
-                            <div className="flex gap-4 px-2">
-                                <Search className="h-5 w-5 text-gray-500 cursor-pointer hover:text-gray-700" />
-                                <MoreVertical className="h-5 w-5 text-gray-500 cursor-pointer hover:text-gray-700" />
                             </div>
                         </div>
 
                         {/* Messages Area */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar z-0">
+                        <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
                             {messages.map((msg) => {
                                 const isMe = msg.senderId === currentUserId;
                                 return (
                                     <motion.div
                                         key={msg.id}
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        className={cn(
-                                            "flex w-full",
-                                            isMe ? "justify-end" : "justify-start"
-                                        )}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className={cn("flex", isMe ? "justify-end" : "justify-start")}
                                     >
                                         <div className={cn(
-                                            "max-w-[85%] sm:max-w-[65%] px-3 py-2 shadow-sm text-sm relative",
-                                            isMe ? "bg-[#d9fdd3] text-gray-900 rounded-lg rounded-tr-none" : "bg-white text-gray-900 rounded-lg rounded-tl-none"
+                                            "max-w-[80%] px-3 py-1.5 text-sm rounded-2xl",
+                                            isMe ? "bg-primary-600 text-white rounded-br-md" : "bg-white text-gray-900 rounded-bl-md border border-gray-100"
                                         )}>
                                             {msg.imageUrl && (
-                                                <div className="mb-2 rounded overflow-hidden">
-                                                    <img src={msg.imageUrl} alt="Shared" className="max-w-full h-auto object-cover" />
-                                                </div>
+                                                <img src={msg.imageUrl} alt="" className="max-w-full rounded-lg mb-1.5" />
                                             )}
-                                            <p className="whitespace-pre-wrap leading-snug">{msg.content}</p>
-                                            <div className="flex items-center justify-end gap-1 mt-1 select-none">
-                                                <span className="text-[10px] text-gray-500/80">
-                                                    {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
-                                                </span>
-                                                {isMe && <CheckCheck className="h-3 w-3 text-[#53bdeb]" />}
-                                            </div>
+                                            <p className="leading-relaxed">{msg.content}</p>
+                                            <p className={cn("text-[9px] mt-0.5 text-right", isMe ? "text-white/70" : "text-gray-400")}>
+                                                {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                            </p>
                                         </div>
                                     </motion.div>
                                 );
@@ -422,15 +415,12 @@ export function ChatInterface({ currentUserRole, currentUserId }: ChatInterfaceP
                         </div>
 
                         {/* Input Area */}
-                        <div className="p-2 sm:p-3 bg-gray-50 flex items-end gap-2 shrink-0 z-10 border-t border-gray-200">
-                            <button className="p-2 text-gray-500 hover:bg-gray-200 rounded-full transition-colors hidden sm:block">
-                                <Smile className="h-6 w-6" />
-                            </button>
+                        <div className="p-2 bg-white border-t border-gray-200 flex items-center gap-2 shrink-0">
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="p-2 text-gray-500 hover:bg-gray-200 rounded-full transition-colors"
+                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                             >
-                                <Paperclip className="h-6 w-6" />
+                                <Paperclip className="h-4 w-4" />
                             </button>
                             <input
                                 type="file"
@@ -440,13 +430,13 @@ export function ChatInterface({ currentUserRole, currentUserId }: ChatInterfaceP
                                 onChange={handleFileUpload}
                             />
 
-                            <form onSubmit={handleSendMessage} className="flex-1 bg-white rounded-lg flex items-center px-4 py-2 shadow-sm border border-gray-100">
+                            <form onSubmit={handleSendMessage} className="flex-1">
                                 <input
                                     type="text"
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
-                                    placeholder="Tapez un message"
-                                    className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-400 text-sm max-h-24"
+                                    placeholder="Message..."
+                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
                                 />
                             </form>
 
@@ -454,33 +444,29 @@ export function ChatInterface({ currentUserRole, currentUserId }: ChatInterfaceP
                                 onClick={() => handleSendMessage()}
                                 disabled={!newMessage.trim() && !isUploading}
                                 className={cn(
-                                    "p-3 rounded-full shadow-sm transition-all flex items-center justify-center",
-                                    newMessage.trim() || isUploading ? "bg-[#00a884] text-white hover:bg-[#008f6f] active:scale-95" : "bg-transparent text-gray-400"
+                                    "p-2 rounded-full transition-all",
+                                    newMessage.trim() || isUploading ? "bg-primary-600 text-white hover:bg-primary-700" : "text-gray-300"
                                 )}
                             >
-                                {isUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                                {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                             </button>
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-500 z-10">
-                        <div className="bg-white p-6 rounded-full shadow-sm mb-6">
-                            <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center">
-                                <Shield className="h-8 w-8 text-[#00a884]" />
-                            </div>
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                        <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                            <Shield className="h-6 w-6 text-gray-400" />
                         </div>
-                        <h3 className="text-xl font-light text-gray-800 mb-2">Mobilart Web</h3>
-                        <p className="max-w-md text-sm text-gray-400 leading-relaxed">
-                            Envoyez et recevez des messages au syndic.<br />
-                            Gardez votre téléphone connecté pour synchroniser les messages.
+                        <p className="text-sm text-gray-600 font-medium mb-1">Messagerie</p>
+                        <p className="text-xs text-gray-400 max-w-xs">
+                            Sélectionnez une conversation ou démarrez-en une nouvelle.
                         </p>
-                        <div className="mt-8 border-t border-gray-300 w-16 mb-4"></div>
                         {currentUserRole === 'resident' && (
                             <button
                                 onClick={() => createConversation()}
-                                className="px-6 py-2 bg-[#00a884] text-white rounded-full font-medium shadow-md hover:bg-[#008f6f] transition-all"
+                                className="mt-4 px-4 py-2 bg-primary-600 text-white text-xs font-medium rounded-full hover:bg-primary-700 transition-colors"
                             >
-                                Démarrer une conversation
+                                Contacter le syndic
                             </button>
                         )}
                     </div>

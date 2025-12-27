@@ -5,9 +5,7 @@ import {
     Loader2,
     Megaphone,
     Calendar,
-    Pin,
-    MessageSquare,
-    Heart
+    Pin
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
@@ -90,21 +88,10 @@ export default function ResidentCommunityPage() {
                                 {ann.content}
                             </div>
 
-                            <div className="flex items-center justify-between border-t border-gray-100 pt-6">
-                                <div className="flex -space-x-2">
-                                    {/* Mock likes/reactions avatars */}
-                                    <div className="h-8 w-8 rounded-full border-2 border-white bg-gray-200" />
-                                    <div className="h-8 w-8 rounded-full border-2 border-white bg-gray-300" />
-                                    <span className="flex items-center justify-center h-8 w-8 rounded-full border-2 border-white bg-gray-50 text-xs font-medium text-gray-500 pl-1">
-                                        +5
-                                    </span>
-                                </div>
-                                <div className="flex gap-4">
-                                    <button className="flex items-center gap-2 text-sm text-gray-500 hover:text-red-500 transition-colors">
-                                        <Heart className="h-5 w-5" />
-                                        <span className="hidden sm:inline">J'aime</span>
-                                    </button>
-                                </div>
+                            <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+                                <span className="text-xs text-gray-400">
+                                    Publié par l'administration
+                                </span>
                             </div>
                         </motion.div>
                     ))
