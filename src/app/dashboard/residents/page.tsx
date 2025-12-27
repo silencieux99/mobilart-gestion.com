@@ -79,17 +79,30 @@ export default function ResidentsPage() {
 
     const handleValidateResident = async (residentId: string) => {
         try {
-            const response = await fetch('/api/residents/validate', {
+            // Récupérer les infos du résident
+            const resident = residents.find(r => r.id === residentId);
+            if (!resident) {
+                throw new Error('Résident non trouvé');
+            }
+
+            // Mettre à jour le statut dans Firestore
+            await setDoc(doc(db, 'users', residentId), {
+                status: 'approved',
+                isActive: true,
+                validatedAt: new Date(),
+                validatedBy: auth.currentUser?.uid || 'admin',
+            }, { merge: true });
+
+            // Envoyer l'email de confirmation
+            await fetch('/api/residents/validate-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ residentId, action: 'approve' })
+                body: JSON.stringify({ 
+                    residentEmail: resident.email,
+                    residentName: `${resident.firstName} ${resident.lastName}`,
+                    action: 'approve' 
+                })
             });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Erreur lors de la validation');
-            }
 
             toast.success('Résident validé avec succès');
         } catch (error: any) {
@@ -102,17 +115,25 @@ export default function ResidentsPage() {
         if (!confirm('Êtes-vous sûr de vouloir rejeter cette demande ?')) return;
 
         try {
-            const response = await fetch('/api/residents/validate', {
+            // Récupérer les infos du résident
+            const resident = residents.find(r => r.id === residentId);
+            if (!resident) {
+                throw new Error('Résident non trouvé');
+            }
+
+            // Envoyer l'email de notification
+            await fetch('/api/residents/validate-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ residentId, action: 'reject' })
+                body: JSON.stringify({ 
+                    residentEmail: resident.email,
+                    residentName: `${resident.firstName} ${resident.lastName}`,
+                    action: 'reject' 
+                })
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Erreur lors du rejet');
-            }
+            // Supprimer le document Firestore
+            await deleteDoc(doc(db, 'users', residentId));
 
             toast.success('Demande rejetée');
         } catch (error: any) {
