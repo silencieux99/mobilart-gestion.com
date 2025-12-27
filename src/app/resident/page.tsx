@@ -13,6 +13,11 @@ export default function ResidentDashboard() {
     const [latestAnnouncement, setLatestAnnouncement] = useState<any>(null);
 
     useEffect(() => {
+        // Scroll to top on mount
+        window.scrollTo(0, 0);
+    }, []);
+
+    useEffect(() => {
         const unsubResidents = onSnapshot(
             query(collection(db, 'users')),
             (snapshot) => {
@@ -37,7 +42,7 @@ export default function ResidentDashboard() {
     }, []);
 
     return (
-        <div className="min-h-[calc(100dvh-80px)] flex flex-col">
+        <div className="h-full flex flex-col overflow-hidden">
             {/* Hero Header */}
             <motion.div
                 initial={{ opacity: 0, y: -10 }}

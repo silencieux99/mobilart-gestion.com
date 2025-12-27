@@ -284,9 +284,9 @@ export default function CommunityChatbox({ className, compact = false }: Communi
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input - Modern floating style */}
-            <div className={cn("shrink-0 p-3", !compact && "pb-4")}>
-                <form onSubmit={handleSendMessage} className="flex items-center gap-2 bg-white border border-gray-200 rounded-full pl-2 pr-1.5 py-1.5 shadow-sm focus-within:border-primary-300 focus-within:ring-2 focus-within:ring-primary-100 transition-all">
+            {/* Input - Sticky to bottom */}
+            <div className="shrink-0 p-2 bg-gray-50/80 backdrop-blur-sm border-t border-gray-100">
+                <form onSubmit={handleSendMessage} className="flex items-center gap-2 bg-white border border-gray-200 rounded-full pl-2 pr-1.5 py-1 shadow-sm focus-within:border-primary-300 focus-within:ring-2 focus-within:ring-primary-100 transition-all">
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -310,6 +310,7 @@ export default function CommunityChatbox({ className, compact = false }: Communi
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
+                        onFocus={scrollToBottom}
                         placeholder="Écrire un message..."
                         className="flex-1 bg-transparent border-none text-sm focus:ring-0 focus:outline-none placeholder:text-gray-400"
                     />

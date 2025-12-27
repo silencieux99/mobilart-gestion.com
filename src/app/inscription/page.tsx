@@ -92,10 +92,10 @@ export default function InscriptionPage() {
         phone: formData.phone,
         role: 'resident',
         occupancyType: formData.occupancyType, // owner | tenant
-        status: 'pending',
+        status: 'active',
         tempApartmentDetails: `Tour ${formData.tower} - Étage ${formData.floor} - Appt ${formData.apartmentNumber}`,
         createdAt: new Date(),
-        isActive: false,
+        isActive: true,
         notificationPreferences: {
           email: true,
           sms: false,
@@ -103,8 +103,8 @@ export default function InscriptionPage() {
         },
         newsletterSubscribed: false,
         registeredAt: new Date(),
-        validatedAt: null,
-        validatedBy: null,
+        validatedAt: new Date(),
+        validatedBy: 'auto',
       });
 
       // 4. Envoyer les emails via l'API

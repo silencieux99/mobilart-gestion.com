@@ -32,9 +32,9 @@ export async function POST(request: Request) {
         // Si Firebase Admin n'est pas disponible, rediriger vers la méthode client
         if (!adminAuth || !adminDb) {
             return NextResponse.json(
-                { 
+                {
                     error: 'Please use client-side registration',
-                    useClientSide: true 
+                    useClientSide: true
                 },
                 { status: 503 }
             );
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
             emailVerified: false,
             password: password,
             displayName: `${firstName} ${lastName}`,
-            disabled: true, // Désactivé jusqu'à validation admin
+            disabled: false,
         });
 
         // Créer le document utilisateur dans Firestore avec statut "pending"
@@ -70,10 +70,10 @@ export async function POST(request: Request) {
             email,
             phone,
             role: 'resident',
-            status: 'pending', // En attente de validation
+            status: 'active',
             tempApartmentDetails,
             createdAt: new Date(),
-            isActive: false, // Inactif jusqu'à validation
+            isActive: true,
             notificationPreferences: {
                 email: true,
                 sms: false,
@@ -81,8 +81,8 @@ export async function POST(request: Request) {
             },
             newsletterSubscribed: false,
             registeredAt: new Date(),
-            validatedAt: null,
-            validatedBy: null,
+            validatedAt: new Date(),
+            validatedBy: 'auto',
         });
 
         // Envoyer un email de confirmation au résident
@@ -153,10 +153,10 @@ export async function POST(request: Request) {
             // On continue même si l'email échoue
         }
 
-        return NextResponse.json({ 
-            success: true, 
+        return NextResponse.json({
+            success: true,
             message: "Inscription réussie. Votre compte est en attente de validation.",
-            userId: userRecord.uid 
+            userId: userRecord.uid
         });
 
     } catch (error: any) {
