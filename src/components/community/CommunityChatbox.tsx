@@ -31,6 +31,7 @@ export default function CommunityChatbox({ className, compact = false }: Communi
     const [sending, setSending] = useState(false);
     const [uploading, setUploading] = useState(false);
 
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -68,7 +69,9 @@ export default function CommunityChatbox({ className, compact = false }: Communi
 
     const scrollToBottom = () => {
         setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            if (messagesContainerRef.current) {
+                messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            }
         }, 50);
     };
 
@@ -159,10 +162,13 @@ export default function CommunityChatbox({ className, compact = false }: Communi
             </div>
 
             {/* Messages */}
-            <div className={cn(
-                "flex-1 overflow-y-auto px-3 py-2 space-y-2",
-                compact && "max-h-[200px]"
-            )}>
+            <div
+                ref={messagesContainerRef}
+                className={cn(
+                    "flex-1 overflow-y-auto px-3 py-2 space-y-2",
+                    compact && "max-h-[200px]"
+                )}
+            >
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full py-8 text-gray-400">
                         <MessageCircle className="h-6 w-6 mb-1 opacity-40" />
@@ -179,10 +185,13 @@ export default function CommunityChatbox({ className, compact = false }: Communi
                                     animate={{ opacity: 1, y: 0 }}
                                     className={cn("flex", isMe ? "justify-end" : "justify-start")}
                                 >
-                                    <div className={cn("max-w-[75%]", isMe && "text-right")}>
-                                        {!isMe && (
-                                            <p className="text-[9px] text-gray-400 mb-0.5 ml-2">{msg.senderName}</p>
-                                        )}
+                                    <div className={cn("max-w-[75%]")}>
+                                        <p className={cn(
+                                            "text-[10px] font-medium mb-0.5",
+                                            isMe ? "text-right text-primary-600 mr-2" : "text-gray-500 ml-2"
+                                        )}>
+                                            {isMe ? 'Vous' : msg.senderName}
+                                        </p>
                                         <div className={cn(
                                             "inline-block rounded-2xl px-3 py-1.5 text-[13px] leading-tight",
                                             isMe
@@ -200,7 +209,7 @@ export default function CommunityChatbox({ className, compact = false }: Communi
                                             )}
                                             {msg.content}
                                         </div>
-                                        <p className={cn("text-[8px] mt-0.5 px-2", isMe ? "text-gray-400" : "text-gray-400")}>
+                                        <p className={cn("text-[8px] mt-0.5 px-2 text-gray-400", isMe && "text-right")}>
                                             {formatTime(msg.createdAt)}
                                         </p>
                                     </div>

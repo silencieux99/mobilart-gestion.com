@@ -1,23 +1,21 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Home, User, Key, Shield, Building2, Car, Package, Mail, Phone } from 'lucide-react';
+import { Home, User, Building2, Car, Package, Mail, Phone, Calendar, Shield, Loader2 } from 'lucide-react';
 import { auth, db } from '@/lib/firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 export default function ResidentApartmentPage() {
-    const [user, setUser] = useState<any>(null);
     const [userData, setUserData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
-                setUser(currentUser);
                 try {
-                    const docRef = doc(db, 'users', currentUser.uid);
-                    const docSnap = await getDoc(docRef);
+                    const docSnap = await getDoc(doc(db, 'users', currentUser.uid));
                     if (docSnap.exists()) {
                         setUserData(docSnap.data());
                     }
@@ -27,131 +25,175 @@ export default function ResidentApartmentPage() {
             }
             setLoading(false);
         });
-
         return () => unsubscribe();
     }, []);
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <div className="flex items-center justify-center h-48">
+                <Loader2 className="h-6 w-6 animate-spin text-primary-500" />
             </div>
         );
     }
 
-    // Helper to safely format apartment details
     const formatApartmentDetails = (details: any) => {
         if (!details) return "Non assigné";
         if (typeof details === 'string') return details;
         if (typeof details === 'object') {
             const { tower, floor, number, apartmentNumber } = details;
-            const num = number || apartmentNumber || '?';
-            return `Tour ${tower || '?'} - Étage ${floor || '?'} - Appt ${num}`;
+            return `Tour ${tower || '?'} • Étage ${floor || '?'} • Appt ${number || apartmentNumber || '?'}`;
         }
-        return "Format inconnu";
+        return "Non défini";
     };
 
-    const apartmentDetails = formatApartmentDetails(userData?.tempApartmentDetails);
-
-    // Handle occupancy type from root or nested object
-    const rawOccupancyType = userData?.occupancyType || (typeof userData?.tempApartmentDetails === 'object' ? userData?.tempApartmentDetails?.occupancyType : null);
+    const rawOccupancyType = userData?.occupancyType ||
+        (typeof userData?.tempApartmentDetails === 'object' ? userData?.tempApartmentDetails?.occupancyType : null);
     const occupancyType = rawOccupancyType === 'owner' ? 'Propriétaire' :
         rawOccupancyType === 'tenant' ? 'Locataire' : 'Résident';
-
     const isOwner = rawOccupancyType === 'owner';
 
-    // Parse temp details if possible "Tour X - Floor Y - Appt Z"
-    // This is a simple display logic, robust parsing would be better but this suffices for now
+    const formatDate = (timestamp: any) => {
+        if (!timestamp) return null;
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    };
 
     return (
-        <div className="space-y-6">
-            {/* Simple Header */}
+        <div className="space-y-4 pb-6">
+            {/* Header */}
             <div>
-                <h1 className="text-xl font-semibold text-gray-900">Mon Appartement</h1>
-                <p className="text-sm text-gray-500">Informations de votre logement</p>
+                <h1 className="text-lg font-semibold text-gray-900">Mon Appartement</h1>
+                <p className="text-xs text-gray-500">Vos informations de logement</p>
             </div>
 
-            {/* Main Info Card - Simple & Clean */}
-            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
-                {/* Apartment Number Header */}
-                <div className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-primary-50 flex items-center justify-center">
-                            <Home className="h-5 w-5 text-primary-600" />
+            {/* Main Card - Apartment */}
+            <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl p-4 text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+                <div className="relative">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
+                            <Home className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide">Logement</p>
-                            <p className="font-semibold text-gray-900">{formatApartmentDetails(userData?.tempApartmentDetails)}</p>
+                            <p className="text-xs text-white/70">Adresse</p>
+                            <p className="font-semibold">{formatApartmentDetails(userData?.tempApartmentDetails)}</p>
                         </div>
                     </div>
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${userData?.validatedAt
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-amber-50 text-amber-700'
-                        }`}>
-                        {userData?.validatedAt ? 'Validé' : 'En attente'}
-                    </span>
-                </div>
-
-                {/* Info Rows */}
-                <div className="p-4 flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Résident</span>
-                    <span className="text-sm font-medium text-gray-900">{userData?.firstName} {userData?.lastName}</span>
-                </div>
-
-                <div className="p-4 flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Statut</span>
-                    <span className={`text-sm font-medium ${isOwner ? 'text-indigo-600' : 'text-orange-600'}`}>
-                        {occupancyType}
-                    </span>
-                </div>
-
-                <div className="p-4 flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Email</span>
-                    <span className="text-sm text-gray-900 truncate max-w-[200px]">{userData?.email}</span>
-                </div>
-
-                <div className="p-4 flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Téléphone</span>
-                    <span className="text-sm text-gray-900">{userData?.phone || 'Non renseigné'}</span>
+                    <div className="flex items-center gap-2 mt-3">
+                        <span className={cn(
+                            "px-2.5 py-1 rounded-full text-xs font-medium",
+                            isOwner ? "bg-indigo-500/30 text-white" : "bg-orange-500/30 text-white"
+                        )}>
+                            {occupancyType}
+                        </span>
+                        <span className={cn(
+                            "px-2.5 py-1 rounded-full text-xs font-medium",
+                            userData?.validatedAt ? "bg-emerald-500/30 text-white" : "bg-amber-500/30 text-white"
+                        )}>
+                            {userData?.validatedAt ? '✓ Validé' : '⏳ En attente'}
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            {/* Parking & Cellar - Only if exists */}
-            {(typeof userData?.tempApartmentDetails === 'object' && (userData.tempApartmentDetails.parking || userData.tempApartmentDetails.cellar)) && (
-                <div className="bg-white rounded-xl border border-gray-200">
-                    <div className="p-4 border-b border-gray-100">
-                        <p className="text-sm font-medium text-gray-900">Dépendances</p>
-                    </div>
+            {/* Personal Info */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Informations personnelles</p>
+                </div>
 
-                    {userData.tempApartmentDetails.parking && (
-                        <div className="p-4 flex items-center justify-between border-b border-gray-100 last:border-0">
-                            <div className="flex items-center gap-2">
-                                <Car className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-600">Parking</span>
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">{userData.tempApartmentDetails.parking}</span>
-                        </div>
-                    )}
-
-                    {userData.tempApartmentDetails.cellar && (
-                        <div className="p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Package className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-600">Cave / Box</span>
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">{userData.tempApartmentDetails.cellar}</span>
-                        </div>
+                <div className="divide-y divide-gray-100">
+                    <InfoRow
+                        icon={User}
+                        label="Nom complet"
+                        value={`${userData?.firstName || ''} ${userData?.lastName || ''}`}
+                    />
+                    <InfoRow
+                        icon={Mail}
+                        label="Email"
+                        value={userData?.email}
+                    />
+                    <InfoRow
+                        icon={Phone}
+                        label="Téléphone"
+                        value={userData?.phone || 'Non renseigné'}
+                    />
+                    {userData?.registeredAt && (
+                        <InfoRow
+                            icon={Calendar}
+                            label="Inscrit le"
+                            value={formatDate(userData.registeredAt)}
+                        />
                     )}
                 </div>
-            )}
+            </div>
 
-            {/* Help Link */}
-            <p className="text-xs text-center text-gray-400">
+            {/* Dependencies - Parking & Cellar */}
+            {typeof userData?.tempApartmentDetails === 'object' &&
+                (userData.tempApartmentDetails.parking || userData.tempApartmentDetails.cellar) && (
+                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Dépendances</p>
+                        </div>
+
+                        <div className="divide-y divide-gray-100">
+                            {userData.tempApartmentDetails.parking && (
+                                <InfoRow
+                                    icon={Car}
+                                    label="Parking"
+                                    value={userData.tempApartmentDetails.parking}
+                                />
+                            )}
+                            {userData.tempApartmentDetails.cellar && (
+                                <InfoRow
+                                    icon={Package}
+                                    label="Cave / Box"
+                                    value={userData.tempApartmentDetails.cellar}
+                                />
+                            )}
+                        </div>
+                    </div>
+                )}
+
+            {/* Residence Info */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Résidence</p>
+                </div>
+
+                <div className="divide-y divide-gray-100">
+                    <InfoRow
+                        icon={Building2}
+                        label="Nom"
+                        value="Résidence Mobilart"
+                    />
+                    <InfoRow
+                        icon={Shield}
+                        label="Syndic"
+                        value="Mobilart Gestion"
+                    />
+                </div>
+            </div>
+
+            {/* Help */}
+            <p className="text-[11px] text-center text-gray-400 pt-2">
                 Besoin de modifier ces informations ?{' '}
-                <a href="/resident/messages" className="text-primary-600 hover:underline">
+                <a href="/resident/messages" className="text-primary-600 font-medium">
                     Contactez-nous
                 </a>
             </p>
+        </div>
+    );
+}
+
+function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string | null }) {
+    return (
+        <div className="px-4 py-3 flex items-start gap-3">
+            <Icon className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+                <p className="text-[11px] text-gray-500 mb-0.5">{label}</p>
+                <p className="text-sm text-gray-900 break-words">{value || '-'}</p>
+            </div>
         </div>
     );
 }
