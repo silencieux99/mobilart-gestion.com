@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard,
     Wallet,
@@ -18,6 +18,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase/config';
+import { toast } from 'sonner';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -37,6 +41,46 @@ const navItems = [
 
 export function ResidentSidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
+    const router = useRouter();
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [userId, setUserId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+            setUserId(user?.uid || null);
+        });
+        return () => unsubscribeAuth();
+    }, []);
+
+    useEffect(() => {
+        if (!userId) return;
+        const q = query(
+            collection(db, 'conversations'),
+            where('participants', 'array-contains', userId)
+        );
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            let count = 0;
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                // Show badge if unreadCount > 0 and last message was NOT sent by me
+                if (data.unreadCount > 0 && data.lastSenderId !== userId) {
+                    count += data.unreadCount;
+                }
+            });
+            setUnreadCount(count);
+        });
+        return () => unsubscribe();
+    }, [userId]);
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            toast.success('Déconnexion réussie');
+            router.push('/');
+        } catch (error) {
+            toast.error('Erreur lors de la déconnexion');
+        }
+    };
 
     return (
         <>
@@ -89,6 +133,7 @@ export function ResidentSidebar({ isOpen, onClose }: SidebarProps) {
                     {navItems.map((item) => {
                         const isActive = pathname === item.href;
                         const Icon = item.icon;
+                        const isMessages = item.name === 'Messagerie';
 
                         return (
                             <Link
@@ -115,6 +160,11 @@ export function ResidentSidebar({ isOpen, onClose }: SidebarProps) {
                                     isActive ? "text-primary-600" : "text-gray-400 group-hover:text-gray-600"
                                 )} />
                                 <span className="relative z-10">{item.name}</span>
+                                {isMessages && unreadCount > 0 && (
+                                    <span className="ml-auto w-5 h-5 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full relative z-10 animate-pulse">
+                                        {unreadCount}
+                                    </span>
+                                )}
                             </Link>
                         );
                     })}
@@ -122,7 +172,10 @@ export function ResidentSidebar({ isOpen, onClose }: SidebarProps) {
 
                 {/* User Footer */}
                 <div className="p-4 border-t border-gray-100">
-                    <button className="flex items-center w-full px-4 py-3 text-sm font-medium text-red-600 rounded-xl hover:bg-red-50 transition-colors group">
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-3 text-sm font-medium text-red-600 rounded-xl hover:bg-red-50 transition-colors group"
+                    >
                         <LogOut className="mr-3 h-5 w-5 text-red-400 group-hover:text-red-600" />
                         Se déconnecter
                     </button>

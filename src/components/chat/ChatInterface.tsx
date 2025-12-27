@@ -162,6 +162,7 @@ export function ChatInterface({ currentUserRole, currentUserId }: ChatInterfaceP
             await setDoc(newConvRef, {
                 participants: [currentUserId, 'admin'],
                 lastMessage: 'Nouvelle conversation',
+                lastSenderId: currentUserId,
                 lastMessageTime: serverTimestamp(),
                 unreadCount: 0,
                 createdAt: serverTimestamp()
@@ -195,8 +196,9 @@ export function ChatInterface({ currentUserRole, currentUserId }: ChatInterfaceP
             // Update conversation last message
             await updateDoc(doc(db, 'conversations', convId), {
                 lastMessage: newMessage,
+                lastSenderId: currentUserId,
                 lastMessageTime: serverTimestamp(),
-                unreadCount: 1 // TODO: Proper increment logic
+                unreadCount: 1
             });
 
             setNewMessage('');
@@ -233,6 +235,7 @@ export function ChatInterface({ currentUserRole, currentUserId }: ChatInterfaceP
 
             await updateDoc(doc(db, 'conversations', activeConversationId), {
                 lastMessage: '📷 Photo',
+                lastSenderId: currentUserId,
                 lastMessageTime: serverTimestamp(),
                 unreadCount: 1
             });
@@ -256,7 +259,7 @@ export function ChatInterface({ currentUserRole, currentUserId }: ChatInterfaceP
     });
 
     return (
-        <div className="flex flex-col md:flex-row h-[80vh] sm:h-[calc(100vh-120px)] w-full bg-white sm:rounded-2xl sm:border border-gray-200 sm:shadow-lg overflow-hidden">
+        <div className="flex flex-col md:flex-row h-[calc(100dvh-100px)] sm:h-[calc(100vh-120px)] w-full bg-white sm:rounded-2xl sm:border border-gray-200 sm:shadow-lg overflow-hidden">
             {/* Sidebar / Conversation List */}
             <div className={cn(
                 "w-full md:w-80 lg:w-96 border-r border-gray-200 flex flex-col bg-white",

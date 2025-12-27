@@ -64,123 +64,94 @@ export default function ResidentApartmentPage() {
     // This is a simple display logic, robust parsing would be better but this suffices for now
 
     return (
-        <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500 pb-10">
-            <div className="px-1">
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900">Mon Appartement</h1>
-                <p className="text-gray-500 mt-1">Vos informations de résidence</p>
+        <div className="space-y-6">
+            {/* Simple Header */}
+            <div>
+                <h1 className="text-xl font-semibold text-gray-900">Mon Appartement</h1>
+                <p className="text-sm text-gray-500">Informations de votre logement</p>
             </div>
 
-            {/* Premium Resident Card */}
-            <div className="relative overflow-hidden rounded-3xl bg-gray-900 text-white shadow-xl p-8 transition-transform hover:scale-[1.01] duration-300">
-                {/* Decorative gradients */}
-                <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-64 w-64 rounded-full bg-primary-500/20 blur-3xl pointer-events-none" />
-
-                <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-12">
-                        <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10">
-                            <Home className="h-6 w-6 text-white" />
+            {/* Main Info Card - Simple & Clean */}
+            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+                {/* Apartment Number Header */}
+                <div className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-primary-50 flex items-center justify-center">
+                            <Home className="h-5 w-5 text-primary-600" />
                         </div>
-                        <div className={`px-4 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md border border-white/10 ${userData?.validatedAt ? 'bg-emerald-500/20 text-emerald-100' : 'bg-amber-500/20 text-amber-100'
-                            }`}>
-                            {userData?.validatedAt ? 'VOUS ÊTES VALIDÉ' : 'EN ATTENTE'}
-                        </div>
-                    </div>
-
-                    <div className="space-y-1">
-                        <p className="text-white/60 text-xs font-bold tracking-widest uppercase">Résidence Mobilart</p>
-                        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-2">
-                            {formatApartmentDetails(userData?.tempApartmentDetails)}
-                        </h2>
-                    </div>
-
-                    <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-6">
                         <div>
-                            <p className="text-white/40 text-[10px] uppercase tracking-wider mb-1 font-bold">Résident Principal</p>
-                            <p className="font-medium text-lg">{userData?.firstName} {userData?.lastName}</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-white/40 text-[10px] uppercase tracking-wider mb-1 font-bold">Statut</p>
-                            <p className="font-medium text-lg">{occupancyType}</p>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Logement</p>
+                            <p className="font-semibold text-gray-900">{formatApartmentDetails(userData?.tempApartmentDetails)}</p>
                         </div>
                     </div>
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${userData?.validatedAt
+                            ? 'bg-green-50 text-green-700'
+                            : 'bg-amber-50 text-amber-700'
+                        }`}>
+                        {userData?.validatedAt ? 'Validé' : 'En attente'}
+                    </span>
+                </div>
+
+                {/* Info Rows */}
+                <div className="p-4 flex items-center justify-between">
+                    <span className="text-sm text-gray-500">Résident</span>
+                    <span className="text-sm font-medium text-gray-900">{userData?.firstName} {userData?.lastName}</span>
+                </div>
+
+                <div className="p-4 flex items-center justify-between">
+                    <span className="text-sm text-gray-500">Statut</span>
+                    <span className={`text-sm font-medium ${isOwner ? 'text-indigo-600' : 'text-orange-600'}`}>
+                        {occupancyType}
+                    </span>
+                </div>
+
+                <div className="p-4 flex items-center justify-between">
+                    <span className="text-sm text-gray-500">Email</span>
+                    <span className="text-sm text-gray-900 truncate max-w-[200px]">{userData?.email}</span>
+                </div>
+
+                <div className="p-4 flex items-center justify-between">
+                    <span className="text-sm text-gray-500">Téléphone</span>
+                    <span className="text-sm text-gray-900">{userData?.phone || 'Non renseigné'}</span>
                 </div>
             </div>
 
-            {/* Details Section */}
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="p-6 md:p-8">
-                    <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-3">
-                        <div className="p-2 bg-gray-50 rounded-lg">
-                            <User className="h-5 w-5 text-gray-500" />
-                        </div>
-                        Informations Personnelles
-                    </h3>
-
-                    <div className="space-y-6">
-                        <div className="flex items-start gap-4 group">
-                            <div className="mt-1">
-                                <Mail className="h-5 w-5 text-gray-400 group-hover:text-primary-500 transition-colors" />
-                            </div>
-                            <div className="flex-1 border-b border-gray-50 pb-4">
-                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Email</p>
-                                <p className="font-medium text-gray-900 break-all text-base">{userData?.email}</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-4 group">
-                            <div className="mt-1">
-                                <Phone className="h-5 w-5 text-gray-400 group-hover:text-primary-500 transition-colors" />
-                            </div>
-                            <div className="flex-1 border-b border-gray-50 pb-4">
-                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Téléphone</p>
-                                <p className="font-medium text-gray-900 text-base">{userData?.phone || "Non renseigné"}</p>
-                            </div>
-                        </div>
+            {/* Parking & Cellar - Only if exists */}
+            {(typeof userData?.tempApartmentDetails === 'object' && (userData.tempApartmentDetails.parking || userData.tempApartmentDetails.cellar)) && (
+                <div className="bg-white rounded-xl border border-gray-200">
+                    <div className="p-4 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-900">Dépendances</p>
                     </div>
+
+                    {userData.tempApartmentDetails.parking && (
+                        <div className="p-4 flex items-center justify-between border-b border-gray-100 last:border-0">
+                            <div className="flex items-center gap-2">
+                                <Car className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-600">Parking</span>
+                            </div>
+                            <span className="text-sm font-medium text-gray-900">{userData.tempApartmentDetails.parking}</span>
+                        </div>
+                    )}
+
+                    {userData.tempApartmentDetails.cellar && (
+                        <div className="p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Package className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-600">Cave / Box</span>
+                            </div>
+                            <span className="text-sm font-medium text-gray-900">{userData.tempApartmentDetails.cellar}</span>
+                        </div>
+                    )}
                 </div>
+            )}
 
-                {(typeof userData?.tempApartmentDetails === 'object' && (userData.tempApartmentDetails.parking || userData.tempApartmentDetails.cellar)) && (
-                    <div className="p-6 md:p-8 bg-gray-50/50 border-t border-gray-100">
-                        <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-3">
-                            <div className="p-2 bg-white rounded-lg shadow-sm">
-                                <Key className="h-5 w-5 text-gray-500" />
-                            </div>
-                            Dépendances
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {userData.tempApartmentDetails.parking && (
-                                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:border-primary-100 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <Car className="h-5 w-5 text-gray-400" />
-                                        <span className="text-gray-600 font-medium">Parking</span>
-                                    </div>
-                                    <span className="font-bold text-gray-900 text-lg">{userData.tempApartmentDetails.parking}</span>
-                                </div>
-                            )}
-                            {userData.tempApartmentDetails.cellar && (
-                                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:border-primary-100 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <Package className="h-5 w-5 text-gray-400" />
-                                        <span className="text-gray-600 font-medium">Box / Cave</span>
-                                    </div>
-                                    <span className="font-bold text-gray-900 text-lg">{userData.tempApartmentDetails.cellar}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            <div className="text-center pt-4">
-                <p className="text-sm text-gray-400">
-                    Ces informations sont incorrectes ? <br />
-                    <a href="/resident/messages" className="text-primary-600 font-semibold hover:text-primary-700 transition-colors inline-flex items-center gap-1 mt-2">
-                        Contacter la gestion
-                        <span aria-hidden="true">&rarr;</span>
-                    </a>
-                </p>
-            </div>
+            {/* Help Link */}
+            <p className="text-xs text-center text-gray-400">
+                Besoin de modifier ces informations ?{' '}
+                <a href="/resident/messages" className="text-primary-600 hover:underline">
+                    Contactez-nous
+                </a>
+            </p>
         </div>
     );
 }
