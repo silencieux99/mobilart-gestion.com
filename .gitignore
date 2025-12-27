@@ -46,6 +46,7 @@ firestore-debug.log
 ui-debug.log
 firebase-export-*
 mobilart-gestion-firebase-adminsdk-*.json
+firebase/functions/
 
 # IDE
 .vscode/
