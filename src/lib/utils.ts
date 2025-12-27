@@ -15,24 +15,33 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function formatDate(date: Date | string | number, formatStr: string = 'dd/MM/yyyy'): string {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
-  
+
   if (!isValid(dateObj)) {
     return 'Date invalide';
   }
-  
+
   return format(dateObj, formatStr, { locale: fr });
 }
 
 /**
  * Formater une date relative (il y a X temps)
  */
-export function formatRelativeDate(date: Date | string | number): string {
-  const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
-  
+export function formatRelativeDate(date: Date | string | number | any): string {
+  let dateObj: Date;
+
+  // Handle Firebase Timestamp
+  if (date && typeof date === 'object' && 'toDate' in date && typeof date.toDate === 'function') {
+    dateObj = date.toDate();
+  } else if (typeof date === 'string' || typeof date === 'number') {
+    dateObj = new Date(date);
+  } else {
+    dateObj = date;
+  }
+
   if (!isValid(dateObj)) {
     return 'Date invalide';
   }
-  
+
   return formatDistance(dateObj, new Date(), { addSuffix: true, locale: fr });
 }
 
@@ -60,11 +69,11 @@ export function formatPercentage(value: number, decimals: number = 1): string {
  */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
@@ -125,15 +134,15 @@ export function isValidPhoneNumber(phone: string): boolean {
  */
 export function formatPhoneNumber(phone: string): string {
   const cleaned = phone.replace(/\D/g, '');
-  
+
   if (cleaned.startsWith('213')) {
     return `+213 ${cleaned.slice(3, 4)} ${cleaned.slice(4, 6)} ${cleaned.slice(6, 8)} ${cleaned.slice(8, 10)} ${cleaned.slice(10, 12)}`;
   }
-  
+
   if (cleaned.startsWith('0')) {
     return `0${cleaned.slice(1, 2)} ${cleaned.slice(2, 4)} ${cleaned.slice(4, 6)} ${cleaned.slice(6, 8)} ${cleaned.slice(8, 10)}`;
   }
-  
+
   return phone;
 }
 
@@ -156,7 +165,7 @@ export function getStatusColor(status: string): string {
     en_retard: 'bg-red-100 text-red-800',
     envoyee: 'bg-blue-100 text-blue-800',
   };
-  
+
   return statusColors[status.toLowerCase()] || 'bg-gray-100 text-gray-800';
 }
 
@@ -176,7 +185,7 @@ export function getStatusIcon(status: string): string {
     moyenne: '📌',
     basse: '📍',
   };
-  
+
   return statusIcons[status.toLowerCase()] || '📋';
 }
 
@@ -188,13 +197,13 @@ export function debounce<T extends (...args: any[]) => any>(
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout;
-  
+
   return function executedFunction(...args: Parameters<T>) {
     const later = () => {
       clearTimeout(timeout);
       func(...args);
     };
-    
+
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
