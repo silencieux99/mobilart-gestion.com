@@ -1,0 +1,244 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // Fonctions d'aide
+    // ============================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function getUserRole() {
+      return isAuthenticated() ? 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : null;
+    }
+    
+    function hasRole(role) {
+      return getUserRole() == role;
+    }
+    
+    function hasAnyRole(roles) {
+      return getUserRole() in roles;
+    }
+    
+    function isSuperAdmin() {
+      return hasRole('super_admin');
+    }
+    
+    function isSyndic() {
+      return hasRole('syndic');
+    }
+    
+    function isGardien() {
+      return hasRole('gardien');
+    }
+    
+    function isTechnicien() {
+      return hasRole('technicien');
+    }
+    
+    function isResident() {
+      return hasRole('resident');
+    }
+    
+    function isComptable() {
+      return hasRole('comptable');
+    }
+    
+    function isAdmin() {
+      return hasAnyRole(['super_admin', 'syndic']);
+    }
+    
+    function isStaff() {
+      return hasAnyRole(['super_admin', 'syndic', 'gardien', 'technicien', 'comptable']);
+    }
+    
+    function belongsToApartment(apartmentId) {
+      return isAuthenticated() && 
+        apartmentId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.apartments;
+    }
+    
+    function canAccessApartment(apartmentId) {
+      return isStaff() || belongsToApartment(apartmentId);
+    }
+    
+    // ============================================
+    // Règles pour les collections
+    // ============================================
+    
+    // Résidences
+    match /residences/{residenceId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+    
+    // Utilisateurs
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (
+        isOwner(userId) || 
+        isStaff()
+      );
+      allow create: if isAdmin();
+      allow update: if isOwner(userId) && 
+        request.resource.data.role == resource.data.role && // Ne peut pas changer son propre rôle
+        request.resource.data.id == resource.data.id || // Ne peut pas changer son ID
+        isAdmin();
+      allow delete: if isSuperAdmin();
+    }
+    
+    // Appartements
+    match /apartments/{apartmentId} {
+      allow read: if isAuthenticated() && (
+        canAccessApartment(apartmentId)
+      );
+      allow write: if isAdmin();
+    }
+    
+    // Incidents
+    match /incidents/{incidentId} {
+      allow read: if isAuthenticated() && (
+        resource.data.reporterId == request.auth.uid ||
+        (resource.data.assignedToId == request.auth.uid) ||
+        isStaff()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.reporterId == request.auth.uid ||
+        resource.data.assignedToId == request.auth.uid ||
+        isStaff()
+      );
+      allow delete: if isAdmin();
+    }
+    
+    // Commentaires d'incidents
+    match /incidents/{incidentId}/comments/{commentId} {
+      allow read: if isAuthenticated() && (
+        get(/databases/$(database)/documents/incidents/$(incidentId)).data.reporterId == request.auth.uid ||
+        isStaff() ||
+        (!resource.data.isInternal) // Les commentaires non internes sont visibles par tous
+      );
+      allow create: if isAuthenticated();
+      allow update: if isOwner(resource.data.authorId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Factures
+    match /invoices/{invoiceId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        canAccessApartment(resource.data.apartmentId) ||
+        hasAnyRole(['super_admin', 'syndic', 'comptable'])
+      );
+      allow create: if hasAnyRole(['super_admin', 'syndic', 'comptable']);
+      allow update: if hasAnyRole(['super_admin', 'syndic', 'comptable']);
+      allow delete: if isSuperAdmin();
+    }
+    
+    // Annonces
+    match /announcements/{announcementId} {
+      allow read: if isAuthenticated() && (
+        resource.data.isPublished == true ||
+        isStaff()
+      );
+      allow write: if isAdmin();
+    }
+    
+    // Documents
+    match /documents/{documentId} {
+      allow read: if isAuthenticated() && (
+        resource.data.isPublic == true ||
+        getUserRole() in resource.data.accessRoles ||
+        isStaff()
+      );
+      allow create: if isStaff();
+      allow update: if isStaff();
+      allow delete: if isAdmin();
+    }
+    
+    // Réservations
+    match /reservations/{reservationId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isStaff()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isStaff()
+      );
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+    
+    // Espaces communs
+    match /commonSpaces/{spaceId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isStaff();
+      allow update: if isOwner(resource.data.userId) && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']);
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+    
+    // Abonnements newsletter
+    match /newsletterSubscriptions/{subscriptionId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isAuthenticated();
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+    
+    // Logs d'audit
+    match /auditLogs/{logId} {
+      allow read: if isSuperAdmin();
+      allow create: if isAuthenticated();
+      allow update: if false; // Les logs ne peuvent pas être modifiés
+      allow delete: if false; // Les logs ne peuvent pas être supprimés
+    }
+    
+    // Paramètres
+    match /settings/{settingId} {
+      allow read: if isStaff();
+      allow write: if isSuperAdmin();
+    }
+    
+    // Statistiques agrégées (lecture seule)
+    match /statistics/{statId} {
+      allow read: if isStaff();
+      allow write: if false; // Géré par Cloud Functions uniquement
+    }
+    
+    // Messages de chat (si activé)
+    match /chatRooms/{roomId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid in resource.data.participants ||
+        isStaff()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        request.auth.uid in resource.data.participants;
+      allow delete: if isAdmin();
+      
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && (
+          request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.participants ||
+          isStaff()
+        );
+        allow create: if isAuthenticated() && 
+          request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.participants;
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+    }
+  }
+}

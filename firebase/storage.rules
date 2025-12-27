@@ -1,0 +1,79 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Fonction helper pour vérifier l'authentification
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Fonction helper pour vérifier le rôle admin
+    function isAdmin() {
+      return isAuthenticated() && 
+        request.auth.token.role in ['super_admin', 'syndic'];
+    }
+    
+    // Images des incidents
+    match /incidents/{incidentId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() 
+        && request.resource.size < 10 * 1024 * 1024 // Max 10MB
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isAdmin();
+    }
+    
+    // Documents officiels de la résidence
+    match /documents/{documentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin()
+        && request.resource.size < 50 * 1024 * 1024 // Max 50MB
+        && (request.resource.contentType.matches('application/pdf') ||
+            request.resource.contentType.matches('image/.*') ||
+            request.resource.contentType.matches('application/msword') ||
+            request.resource.contentType.matches('application/vnd.*'));
+      allow delete: if isAdmin();
+    }
+    
+    // Avatars des utilisateurs
+    match /avatars/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() 
+        && request.auth.uid == userId
+        && request.resource.size < 5 * 1024 * 1024 // Max 5MB
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth.uid == userId || isAdmin();
+    }
+    
+    // Images des annonces
+    match /announcements/{announcementId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin()
+        && request.resource.size < 10 * 1024 * 1024 // Max 10MB
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isAdmin();
+    }
+    
+    // Fichiers des espaces communs
+    match /common-spaces/{spaceId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin()
+        && request.resource.size < 10 * 1024 * 1024 // Max 10MB
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isAdmin();
+    }
+    
+    // Factures PDF
+    match /invoices/{invoiceId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin()
+        && request.resource.size < 10 * 1024 * 1024 // Max 10MB
+        && request.resource.contentType == 'application/pdf';
+      allow delete: if isAdmin();
+    }
+    
+    // Fichiers temporaires (auto-suppression après 24h via lifecycle)
+    match /temp/{allPaths=**} {
+      allow read, write: if isAuthenticated()
+        && request.resource.size < 10 * 1024 * 1024; // Max 10MB
+    }
+  }
+}
