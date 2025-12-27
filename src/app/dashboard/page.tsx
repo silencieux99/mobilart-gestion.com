@@ -30,6 +30,7 @@ import Link from 'next/link';
 import { collection, query, where, getCountFromServer, getDocs, limit, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { UserRole, IncidentStatus } from '@/types';
+import CommunityChatbox from '@/components/community/CommunityChatbox';
 
 export default function DashboardPage() {
     const [stats, setStats] = useState({
@@ -244,14 +245,9 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Pending Tasks / Quick Actions */}
+                {/* Community Chat */}
                 <div className="space-y-6">
-                    <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
-                        <h3 className="font-bold text-gray-900 text-lg mb-4">Tâches en attente</h3>
-                        <div className="space-y-3">
-                            <p className="text-sm text-gray-500 italic">Aucune tâche en attente.</p>
-                        </div>
-                    </div>
+                    <CommunityChatbox compact />
 
                     <div className="grid grid-cols-2 gap-4">
                         <Link href="/dashboard/finance">
@@ -271,17 +267,17 @@ export default function DashboardPage() {
                         <Link href="/dashboard/incidents">
                             <QuickActionCard
                                 icon={AlertCircle}
-                                label="Signaler Incident"
+                                label="Voir Incidents"
                                 color="bg-amber-50 text-amber-600"
                             />
                         </Link>
-                        <button onClick={() => alert("Fonctionnalité bientôt disponible")}>
+                        <Link href="/dashboard/communication">
                             <QuickActionCard
                                 icon={MoreVertical}
-                                label="Autres Actions"
+                                label="Communication"
                                 color="bg-gray-50 text-gray-600"
                             />
-                        </button>
+                        </Link>
                     </div>
                 </div>
 
