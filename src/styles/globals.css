@@ -63,6 +63,18 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
   }
+
+  /* Empêcher le zoom automatique sur iPhone lors du focus des inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
 
 @layer components {

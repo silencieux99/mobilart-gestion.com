@@ -42,18 +42,20 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden font-sans">
-      {/* Immersive Background */}
+      {/* Immersive Background HD */}
       <div className="absolute inset-0 z-0">
         <Image
           src="/images/tours.png"
-          alt="Tours Mobilart"
+          alt="Tours Mobilart - Résidence Oran"
           fill
           priority
-          className="object-cover"
+          className="object-cover scale-105"
           quality={100}
+          sizes="100vw"
         />
-        {/* Gradient Overlay for better readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+        {/* Gradient Overlay moderne */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/60 via-black/50 to-slate-900/70" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(6,182,212,0.15),transparent_50%)]" />
       </div>
 
       {/* Content Container */}
@@ -64,8 +66,8 @@ export default function LoginPage() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="w-full max-w-md"
         >
-          {/* Glass Card */}
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-2xl overflow-hidden">
+          {/* Glass Card Premium */}
+          <div className="backdrop-blur-2xl bg-white/5 border border-white/20 shadow-2xl rounded-3xl overflow-hidden ring-1 ring-white/10">
             <div className="p-8 sm:p-10">
               {/* Header */}
               <div className="text-center mb-8">
@@ -77,11 +79,14 @@ export default function LoginPage() {
                 >
                   <Building2 className="nav-icon h-8 w-8 text-white" />
                 </motion.div>
-                <h1 className="text-3xl font-display font-bold text-white mb-2 tracking-tight">
+                <h1 className="text-3xl font-display font-bold text-white mb-2 tracking-tight drop-shadow-lg">
                   Mobilart Gestion
                 </h1>
-                <p className="text-primary-100/80 text-lg">
+                <p className="text-primary-100/90 text-lg font-medium">
                   Espace Résident
+                </p>
+                <p className="text-white/60 text-sm mt-2">
+                  Résidence Mobilart • Oran, Algérie
                 </p>
               </div>
 
@@ -115,7 +120,8 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       placeholder="Email"
-                      className="block w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all font-medium"
+                      className="block w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all font-medium text-base"
+                      style={{ fontSize: '16px' }}
                     />
                   </div>
 
@@ -129,7 +135,8 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       placeholder="Mot de passe"
-                      className="block w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all font-medium"
+                      className="block w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all font-medium text-base"
+                      style={{ fontSize: '16px' }}
                     />
                     <button
                       type="button"
@@ -195,7 +202,7 @@ export default function LoginPage() {
             transition={{ delay: 0.8 }}
             className="text-center text-white/40 text-xs mt-8"
           >
-            © 2024 Mobilart Gestion. Tous droits réservés.
+            © 2025 Mobilart Gestion • Résidence Mobilart, Oran, Algérie • Tous droits réservés.
           </motion.p>
         </motion.div>
       </div>
