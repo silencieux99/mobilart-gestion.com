@@ -30,9 +30,21 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      await AuthService.signIn(email, password);
-      // Redirection vers le dashboard après succès
-      router.push('/dashboard');
+      const user = await AuthService.signIn(email, password);
+      
+      // Récupérer le rôle de l'utilisateur depuis Firestore
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase/config');
+      
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = userDoc.data();
+      
+      // Redirection selon le rôle
+      if (userData?.role === 'admin') {
+        router.push('/dashboard');
+      } else {
+        router.push('/resident');
+      }
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Une erreur est survenue lors de la connexion');

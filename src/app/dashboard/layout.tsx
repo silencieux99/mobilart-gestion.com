@@ -31,7 +31,16 @@ export default function DashboardLayout({
                 // Optimistic UI could be used here, but for now we fetch fresh data
                 const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
                 if (userDoc.exists()) {
-                    setUser({ id: userDoc.id, ...userDoc.data() } as AppUser);
+                    const userData = userDoc.data();
+                    
+                    // Vérifier si l'utilisateur est admin
+                    if (userData.role !== 'admin') {
+                        // Rediriger les non-admins vers l'espace résident
+                        router.push('/resident');
+                        return;
+                    }
+                    
+                    setUser({ id: userDoc.id, ...userData } as AppUser);
                 }
             } catch (error) {
                 console.error('Error fetching user data:', error);

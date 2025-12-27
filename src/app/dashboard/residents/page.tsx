@@ -346,7 +346,13 @@ export default function ResidentsPage() {
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: index * 0.05 }}
-                                            className="group hover:bg-gray-50/50 transition-colors"
+                                            className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+                                            onClick={(e) => {
+                                                // Ne pas naviguer si on clique sur un bouton d'action
+                                                if (!(e.target as HTMLElement).closest('button')) {
+                                                    router.push(`/dashboard/residents/${resident.id}`);
+                                                }
+                                            }}
                                         >
                                             <td className="py-4 px-6">
                                                 <div className="flex items-center gap-4">
@@ -354,7 +360,9 @@ export default function ResidentsPage() {
                                                         {(resident.firstName?.[0] || '')}{(resident.lastName?.[0] || '')}
                                                     </div>
                                                     <div>
-                                                        <p className="font-semibold text-gray-900">{resident.firstName} {resident.lastName}</p>
+                                                        <p className="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+                                                            {resident.firstName} {resident.lastName}
+                                                        </p>
                                                         <span className={cn(
                                                             "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-0.5",
                                                             occupancy === 'owner'

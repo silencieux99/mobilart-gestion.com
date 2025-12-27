@@ -55,7 +55,7 @@ export default function SetupAdminPage() {
 
       toast.success('Compte administrateur créé avec succès !');
       
-      // Rediriger vers le dashboard
+      // Rediriger vers le dashboard admin car c'est un admin
       setTimeout(() => {
         router.push('/dashboard');
       }, 1500);

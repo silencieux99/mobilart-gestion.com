@@ -31,13 +31,23 @@ export default function ResidentLayout({
             try {
                 const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
                 if (userDoc.exists()) {
-                    const userData = { id: userDoc.id, ...userDoc.data() } as AppUser;
+                    const docData = userDoc.data();
+                    const userData = { id: userDoc.id, ...docData } as AppUser;
+                    
+                    // Vérifier si l'utilisateur est admin (utiliser la valeur string directement)
+                    if (docData.role === 'admin') {
+                        // Rediriger les admins vers le dashboard admin
+                        router.push('/dashboard');
+                        return;
+                    }
+                    
+                    // Vérifier si le compte est actif
+                    if (!userData.isActive || docData.status === 'pending') {
+                        router.push('/');
+                        return;
+                    }
+                    
                     setUser(userData);
-
-                    // Simple role check optional
-                    // if (userData.role !== UserRole.RESIDENT && userData.role !== UserRole.SUPER_ADMIN) {
-                    //    router.push('/access-denied');
-                    // }
                 }
             } catch (error) {
                 console.error('Error fetching user data:', error);
