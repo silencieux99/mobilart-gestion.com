@@ -1,6 +1,17 @@
 import { NextResponse } from 'next/server';
-import { getAdminAuth, getAdminDb } from '@/lib/firebase-admin/config';
 import nodemailer from 'nodemailer';
+
+// Firebase Admin SDK (optionnel)
+let adminAuth: any = null;
+let adminDb: any = null;
+
+try {
+    const { getAdminAuth, getAdminDb } = require('@/lib/firebase-admin/config');
+    adminAuth = getAdminAuth();
+    adminDb = getAdminDb();
+} catch (error) {
+    console.log('Firebase Admin not available');
+}
 
 // Configure Nodemailer transporter
 const transporter = nodemailer.createTransport({
@@ -15,12 +26,9 @@ const transporter = nodemailer.createTransport({
 
 export async function POST(request: Request) {
     try {
-        const adminAuth = getAdminAuth();
-        const adminDb = getAdminDb();
-
         if (!adminAuth || !adminDb) {
             return NextResponse.json(
-                { error: 'Firebase Admin not initialized' },
+                { error: 'Firebase Admin not initialized. Please configure FIREBASE_SERVICE_ACCOUNT_KEY in .env.local' },
                 { status: 500 }
             );
         }

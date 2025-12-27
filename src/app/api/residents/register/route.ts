@@ -26,9 +26,19 @@ try {
 
 export async function POST(request: Request) {
     try {
-
         const body = await request.json();
         const { firstName, lastName, email, phone, password, tempApartmentDetails } = body;
+
+        // Si Firebase Admin n'est pas disponible, rediriger vers la méthode client
+        if (!adminAuth || !adminDb) {
+            return NextResponse.json(
+                { 
+                    error: 'Please use client-side registration',
+                    useClientSide: true 
+                },
+                { status: 503 }
+            );
+        }
 
         // Vérifier si l'email existe déjà
         try {
