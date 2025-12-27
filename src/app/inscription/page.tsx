@@ -158,7 +158,7 @@ export default function InscriptionPage() {
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden font-sans">
+    <div className="fixed inset-0 w-full h-full overflow-hidden font-sans">
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -166,42 +166,34 @@ export default function InscriptionPage() {
           alt="Tours Mobilart - Résidence Oran"
           fill
           priority
-          className="object-cover scale-105"
+          className="object-cover"
           quality={100}
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/60 via-black/50 to-slate-900/70" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(6,182,212,0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex min-h-screen items-end sm:items-center justify-center p-4 sm:p-6 lg:p-8 pb-8 sm:pb-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-2xl"
-        >
-          {/* Glass Card - Compact sur mobile */}
-          <div className="backdrop-blur-2xl bg-white/5 border border-white/20 shadow-2xl rounded-3xl overflow-hidden ring-1 ring-white/10">
-            <div className="p-6 sm:p-10">
-              {/* Header */}
-              <div className="text-center mb-8">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                  className="mx-auto h-16 w-16 rounded-xl bg-primary-500/90 flex items-center justify-center shadow-lg mb-6"
-                >
-                  <Building2 className="h-8 w-8 text-white" />
-                </motion.div>
-                <h1 className="text-3xl font-display font-bold text-white mb-2 tracking-tight drop-shadow-lg">
-                  Inscription Résident
-                </h1>
-                <p className="text-white/70">
-                  Créez votre compte pour accéder à votre espace résident
-                </p>
-              </div>
+      {/* Content - Scrollable on mobile */}
+      <div className="absolute inset-0 z-10 overflow-y-auto">
+        <div className="min-h-full flex items-end sm:items-center justify-center p-4 sm:p-6 lg:p-8 pb-0 sm:pb-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="w-full max-w-lg sm:max-w-2xl mb-4 sm:mb-0"
+          >
+            {/* Glass Card Minimal */}
+            <div className="backdrop-blur-md bg-black/20 border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden">
+              <div className="p-4 sm:p-8">
+                {/* Header Minimal */}
+                <div className="text-center mb-4 sm:mb-6">
+                  <h1 className="text-lg sm:text-2xl font-display font-bold text-white mb-1">
+                    Inscription
+                  </h1>
+                  <p className="text-white/60 text-xs sm:text-sm">
+                    Créez votre compte résident
+                  </p>
+                </div>
 
               {/* Error Message */}
               <AnimatePresence>
@@ -220,235 +212,164 @@ export default function InscriptionPage() {
                 )}
               </AnimatePresence>
 
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Informations personnelles */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="relative group">
-                    <label className="block text-white/70 text-sm font-medium mb-2">Prénom *</label>
+                {/* Form Minimal */}
+                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+                  {/* Informations personnelles */}
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <input
                       type="text"
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleChange}
                       required
-                      placeholder="Votre prénom"
-                      className="block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-base"
+                      placeholder="Prénom"
+                      className="w-full px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-sm sm:text-base"
                       style={{ fontSize: '16px' }}
                     />
-                  </div>
 
-                  <div className="relative group">
-                    <label className="block text-white/70 text-sm font-medium mb-2">Nom *</label>
                     <input
                       type="text"
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleChange}
                       required
-                      placeholder="Votre nom"
-                      className="block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-base"
+                      placeholder="Nom"
+                      className="w-full px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-sm sm:text-base"
                       style={{ fontSize: '16px' }}
                     />
                   </div>
-                </div>
 
-                <div className="relative group">
-                  <label className="block text-white/70 text-sm font-medium mb-2">Email *</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-white/50" />
-                    </div>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    placeholder="Email"
+                    className="w-full px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-sm sm:text-base"
+                    style={{ fontSize: '16px' }}
+                  />
+
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                    placeholder="Téléphone"
+                    className="w-full px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-sm sm:text-base"
+                    style={{ fontSize: '16px' }}
+                  />
+
+                  {/* Appartement - Ligne simple */}
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    <select
+                      name="tower"
+                      value={formData.tower}
                       onChange={handleChange}
                       required
-                      placeholder="votre.email@exemple.com"
-                      className="block w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-base"
+                      className="w-full px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-sm sm:text-base"
                       style={{ fontSize: '16px' }}
-                    />
-                  </div>
-                </div>
+                    >
+                      <option value="" className="bg-slate-800">Tour</option>
+                      <option value="A" className="bg-slate-800">Tour A</option>
+                      <option value="B" className="bg-slate-800">Tour B</option>
+                      <option value="C" className="bg-slate-800">Tour C</option>
+                      <option value="D" className="bg-slate-800">Tour D</option>
+                    </select>
 
-                <div className="relative group">
-                  <label className="block text-white/70 text-sm font-medium mb-2">Téléphone *</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Phone className="h-5 w-5 text-white/50" />
-                    </div>
                     <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
+                      type="number"
+                      name="floor"
+                      value={formData.floor}
                       onChange={handleChange}
                       required
-                      placeholder="+213 XXX XXX XXX"
-                      className="block w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-base"
+                      min="1"
+                      max="30"
+                      placeholder="Étage"
+                      className="w-full px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-sm sm:text-base"
+                      style={{ fontSize: '16px' }}
+                    />
+
+                    <input
+                      type="text"
+                      name="apartmentNumber"
+                      value={formData.apartmentNumber}
+                      onChange={handleChange}
+                      required
+                      placeholder="N°"
+                      className="w-full px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-sm sm:text-base"
                       style={{ fontSize: '16px' }}
                     />
                   </div>
-                </div>
 
-                {/* Informations appartement */}
-                <div className="border-t border-white/10 pt-6">
-                  <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                    <Home className="h-5 w-5" />
-                    Informations Appartement
-                  </h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-white/70 text-sm font-medium mb-2">Tour *</label>
-                      <select
-                        name="tower"
-                        value={formData.tower}
-                        onChange={handleChange}
-                        required
-                        className="block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-base"
-                        style={{ fontSize: '16px' }}
-                      >
-                        <option value="" className="bg-slate-800">Sélectionner</option>
-                        <option value="A" className="bg-slate-800">Tour A</option>
-                        <option value="B" className="bg-slate-800">Tour B</option>
-                        <option value="C" className="bg-slate-800">Tour C</option>
-                        <option value="D" className="bg-slate-800">Tour D</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-white/70 text-sm font-medium mb-2">Étage *</label>
-                      <input
-                        type="number"
-                        name="floor"
-                        value={formData.floor}
-                        onChange={handleChange}
-                        required
-                        min="1"
-                        max="30"
-                        placeholder="1-30"
-                        className="block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-base"
-                        style={{ fontSize: '16px' }}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-white/70 text-sm font-medium mb-2">N° Appt *</label>
-                      <input
-                        type="text"
-                        name="apartmentNumber"
-                        value={formData.apartmentNumber}
-                        onChange={handleChange}
-                        required
-                        placeholder="01"
-                        className="block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-base"
-                        style={{ fontSize: '16px' }}
-                      />
-                    </div>
+                  {/* Mot de passe */}
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                      placeholder="Mot de passe (8+ caractères)"
+                      className="w-full pl-3 pr-10 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-sm sm:text-base"
+                      style={{ fontSize: '16px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/40 hover:text-white transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
-                </div>
 
-                {/* Mot de passe */}
-                <div className="border-t border-white/10 pt-6">
-                  <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                    <Lock className="h-5 w-5" />
-                    Sécurité
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="relative group">
-                      <label className="block text-white/70 text-sm font-medium mb-2">Mot de passe *</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <Lock className="h-5 w-5 text-white/50" />
-                        </div>
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          name="password"
-                          value={formData.password}
-                          onChange={handleChange}
-                          required
-                          placeholder="Minimum 8 caractères"
-                          className="block w-full pl-12 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-base"
-                          style={{ fontSize: '16px' }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute inset-y-0 right-0 pr-4 flex items-center text-white/40 hover:text-white transition-colors"
-                        >
-                          {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="relative group">
-                      <label className="block text-white/70 text-sm font-medium mb-2">Confirmer le mot de passe *</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <Lock className="h-5 w-5 text-white/50" />
-                        </div>
-                        <input
-                          type={showConfirmPassword ? "text" : "password"}
-                          name="confirmPassword"
-                          value={formData.confirmPassword}
-                          onChange={handleChange}
-                          required
-                          placeholder="Confirmez votre mot de passe"
-                          className="block w-full pl-12 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-base"
-                          style={{ fontSize: '16px' }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute inset-y-0 right-0 pr-4 flex items-center text-white/40 hover:text-white transition-colors"
-                        >
-                          {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        </button>
-                      </div>
-                    </div>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      required
+                      placeholder="Confirmer le mot de passe"
+                      className="w-full pl-3 pr-10 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-sm sm:text-base"
+                      style={{ fontSize: '16px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/40 hover:text-white transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center bg-primary-500 hover:bg-primary-400 text-white py-2.5 sm:py-3 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+                  >
+                    {isLoading ? (
+                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      "S'inscrire"
+                    )}
+                  </button>
+                </form>
+
+                {/* Footer Minimal */}
+                <div className="text-center mt-4 pb-2">
+                  <p className="text-white/50 text-xs">
+                    Déjà un compte ?
+                    <Link href="/" className="text-white/80 font-medium hover:text-white ml-1">
+                      Se connecter
+                    </Link>
+                  </p>
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full flex items-center justify-center bg-primary-500 hover:bg-primary-400 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-primary-500/30 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
-                >
-                  {isLoading ? (
-                    <div className="h-6 w-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    "S'inscrire"
-                  )}
-                </button>
-              </form>
+              </div>
             </div>
-
-            {/* Footer */}
-            <div className="px-8 py-6 bg-white/5 border-t border-white/10 text-center">
-              <p className="text-white/60 text-sm">
-                Vous avez déjà un compte ?{' '}
-                <Link href="/" className="text-white font-semibold hover:underline decoration-primary-400 decoration-2 underline-offset-4 transition-all">
-                  Se connecter
-                </Link>
-              </p>
-            </div>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center mt-6"
-          >
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Retour à l'accueil
-            </Link>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
