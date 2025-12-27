@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Manrope } from 'next/font/google';
 import '@/styles/globals.css';
 import { Toaster } from 'sonner';
@@ -72,6 +72,14 @@ export const metadata: Metadata = {
     ],
   },
   manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 0.7,
+  minimumScale: 0.5,
+  maximumScale: 1,
+  userScalable: true,
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#06B6D4' },
     { media: '(prefers-color-scheme: dark)', color: '#0F172A' },
