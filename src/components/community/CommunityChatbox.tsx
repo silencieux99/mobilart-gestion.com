@@ -161,7 +161,7 @@ export default function CommunityChatbox({ className, compact = false }: Communi
             {/* Messages */}
             <div className={cn(
                 "flex-1 overflow-y-auto px-3 py-2 space-y-2",
-                compact && "max-h-[250px]"
+                compact && "max-h-[200px]"
             )}>
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full py-8 text-gray-400">

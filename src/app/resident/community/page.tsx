@@ -1,19 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-    Loader2,
-    Megaphone,
-    Calendar,
-    Pin
-} from 'lucide-react';
+import { Loader2, Megaphone, Pin, Clock, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import { cn } from '@/lib/utils';
 
 export default function ResidentCommunityPage() {
     const [announcements, setAnnouncements] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState<string>('all');
 
     useEffect(() => {
         const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
@@ -25,73 +22,129 @@ export default function ResidentCommunityPage() {
         return () => unsubscribe();
     }, []);
 
+    const categories = ['all', 'Information', 'Maintenance', 'Urgent', 'Événement'];
+
+    const filteredAnnouncements = filter === 'all'
+        ? announcements
+        : announcements.filter(a => a.category === filter);
+
+    const formatDate = (timestamp: any) => {
+        if (!timestamp?.toDate) return '';
+        const date = timestamp.toDate();
+        const now = new Date();
+        const diff = now.getTime() - date.getTime();
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+        if (days === 0) return "Aujourd'hui";
+        if (days === 1) return "Hier";
+        if (days < 7) return `Il y a ${days} jours`;
+        return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    };
+
+    const getCategoryStyle = (category: string) => {
+        switch (category?.toLowerCase()) {
+            case 'urgent': return 'bg-red-100 text-red-700';
+            case 'maintenance': return 'bg-amber-100 text-amber-700';
+            case 'événement': return 'bg-purple-100 text-purple-700';
+            default: return 'bg-primary-100 text-primary-700';
+        }
+    };
+
     if (loading) {
         return (
-            <div className="h-96 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
+            <div className="h-48 flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-primary-500" />
             </div>
         );
     }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8">
-            <div className="text-center sm:text-left">
-                <h1 className="text-3xl font-display font-bold text-gray-900 tracking-tight">
-                    Vie de la Résidence
-                </h1>
-                <p className="text-gray-500 mt-2 text-lg">
-                    Actualités, événements et informations importantes.
-                </p>
+        <div className="space-y-4">
+            {/* Header */}
+            <div>
+                <h1 className="text-lg font-semibold text-gray-900">Actualités</h1>
+                <p className="text-xs text-gray-500">{announcements.length} annonce(s) de la résidence</p>
             </div>
 
-            <div className="space-y-6">
-                {announcements.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
-                        <Megaphone className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500">Aucune annonce pour le moment.</p>
+            {/* Filter Pills */}
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+                {categories.map((cat) => (
+                    <button
+                        key={cat}
+                        onClick={() => setFilter(cat)}
+                        className={cn(
+                            "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0",
+                            filter === cat
+                                ? "bg-primary-600 text-white"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        )}
+                    >
+                        {cat === 'all' ? 'Tout' : cat}
+                    </button>
+                ))}
+            </div>
+
+            {/* Announcements List */}
+            <div className="space-y-3">
+                {filteredAnnouncements.length === 0 ? (
+                    <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+                        <Megaphone className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                        <p className="text-sm text-gray-500">Aucune annonce</p>
                     </div>
                 ) : (
-                    announcements.map((ann, index) => (
+                    filteredAnnouncements.map((ann, index) => (
                         <motion.div
                             key={ann.id}
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden group"
+                            transition={{ delay: index * 0.03 }}
+                            className={cn(
+                                "bg-white rounded-xl p-4 border transition-all",
+                                ann.category?.toLowerCase() === 'urgent'
+                                    ? "border-red-200 bg-red-50/30"
+                                    : "border-gray-100"
+                            )}
                         >
-                            {/* Decorative Background Element */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-gray-50 to-white rounded-bl-full -z-10 opacity-50 group-hover:scale-110 transition-transform" />
-
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center">
-                                        <Megaphone className="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <span className="text-xs font-bold text-primary-600 uppercase tracking-wider block mb-0.5">
-                                            {ann.category || 'Information'}
-                                        </span>
-                                        <span className="text-xs text-gray-400">
-                                            {ann.createdAt?.toDate ? ann.createdAt.toDate().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Date inconnue'}
-                                        </span>
-                                    </div>
+                            {/* Top Row */}
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                                <div className="flex items-center gap-2">
+                                    <span className={cn(
+                                        "px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase",
+                                        getCategoryStyle(ann.category)
+                                    )}>
+                                        {ann.category || 'Info'}
+                                    </span>
+                                    {ann.category?.toLowerCase() === 'urgent' && (
+                                        <Pin className="h-3.5 w-3.5 text-red-500 rotate-45" />
+                                    )}
                                 </div>
-                                {/* Pin icon if high priority (mock) */}
-                                {ann.priority === 'urgent' && <Pin className="h-5 w-5 text-red-400 rotate-45" />}
+                                <span className="text-[10px] text-gray-400 flex items-center gap-1 shrink-0">
+                                    <Clock className="h-3 w-3" />
+                                    {formatDate(ann.createdAt)}
+                                </span>
                             </div>
 
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 leading-snug">
+                            {/* Title */}
+                            <h2 className="text-sm font-semibold text-gray-900 mb-2 leading-snug">
                                 {ann.title}
                             </h2>
 
-                            <div className="prose prose-gray max-w-none text-gray-600 mb-6 leading-relaxed">
+                            {/* Content */}
+                            <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line">
                                 {ann.content}
-                            </div>
+                            </p>
 
-                            <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-                                <span className="text-xs text-gray-400">
-                                    Publié par l'administration
+                            {/* Footer */}
+                            <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-100">
+                                <span className="text-[10px] text-gray-400">
+                                    Administration
                                 </span>
+                                {ann.audience && (
+                                    <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                                        <Tag className="h-2.5 w-2.5" />
+                                        {ann.audience}
+                                    </span>
+                                )}
                             </div>
                         </motion.div>
                     ))
