@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { ResidentSidebar } from '@/components/resident/ResidentSidebar';
 import { Header } from '@/components/dashboard/Header';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -17,6 +17,8 @@ export default function ResidentLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
+    const pathname = usePathname();
+    const mainRef = useRef<HTMLElement>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [user, setUser] = useState<AppUser | null>(null);
     const [loading, setLoading] = useState(true);
@@ -59,6 +61,14 @@ export default function ResidentLayout({
         return () => unsubscribe();
     }, [router]);
 
+    // Scroll to top on route change
+    useEffect(() => {
+        if (mainRef.current) {
+            mainRef.current.scrollTop = 0;
+        }
+        window.scrollTo(0, 0);
+    }, [pathname]);
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -79,7 +89,7 @@ export default function ResidentLayout({
             <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
                 <Header user={user} onMenuClick={() => setSidebarOpen(true)} />
 
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+                <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-6">
                     <div className="max-w-2xl mx-auto">
                         {children}
                     </div>

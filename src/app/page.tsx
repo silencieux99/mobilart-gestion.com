@@ -31,14 +31,14 @@ export default function LoginPage() {
 
     try {
       const user = await AuthService.signIn(email, password);
-      
+
       // Récupérer le rôle de l'utilisateur depuis Firestore
       const { doc, getDoc } = await import('firebase/firestore');
       const { db } = await import('@/lib/firebase/config');
-      
+
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       const userData = userDoc.data();
-      
+
       // Redirection selon le rôle
       if (userData?.role === 'admin') {
         router.push('/dashboard');
@@ -69,8 +69,8 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
       </div>
 
-      {/* Content Container - Responsive pour clavier mobile */}
-      <div className="relative z-10 min-h-screen flex items-end sm:items-center justify-center p-4 sm:p-6 lg:p-8 pb-safe">
+      {/* Content Container */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -176,7 +176,7 @@ export default function LoginPage() {
             {/* Card Footer Ultra Compact */}
             <div className="px-5 py-3 sm:px-8 sm:py-6 bg-white/5 border-t border-white/10 text-center">
               <p className="text-white/60 text-[11px] sm:text-sm">
-                Pas de compte ? 
+                Pas de compte ?
                 <Link href="/inscription" className="text-white font-medium hover:underline ml-1">
                   S'inscrire
                 </Link>

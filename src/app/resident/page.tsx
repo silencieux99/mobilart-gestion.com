@@ -19,11 +19,6 @@ export default function ResidentDashboard() {
     const [userId, setUserId] = useState<string | null>(null);
 
     useEffect(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-        document.documentElement.scrollTop = 0;
-    }, []);
-
-    useEffect(() => {
         const unsubAuth = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 setUserId(user.uid);
