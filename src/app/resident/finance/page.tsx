@@ -27,19 +27,21 @@ export default function ResidentFinancePage() {
             if (user) {
                 const q = query(
                     collection(db, 'invoices'),
-                    // where('userId', '==', user.uid), // Uncomment when userId is properly populated in invoices
-                    orderBy('createdAt', 'desc')
+                    where('userId', '==', user.uid)
                 );
 
                 const unsubscribeData = onSnapshot(q, (snapshot) => {
-                    // Filter manually for now if userId isn't always set or to mock viewing all for demo
-                    // const fetchedInvoices = snapshot.docs.filter(d => d.data().userId === user.uid)...
-                    // Lets just take all for demo purposes or filter if 'userId' exists
-
-                    const fetchedInvoices = snapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    }));
+                    const fetchedInvoices = snapshot.docs
+                        .map(doc => ({
+                            id: doc.id,
+                            ...doc.data()
+                        }))
+                        .sort((a: any, b: any) => {
+                            // Sort by createdAt desc
+                            const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+                            const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+                            return dateB - dateA;
+                        });
 
                     const unpaid = fetchedInvoices
                         .filter((inv: any) => inv.status !== 'paid')

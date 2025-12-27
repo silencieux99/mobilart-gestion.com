@@ -36,11 +36,7 @@ export default function ResidentDashboard() {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 try {
-                    // Fetch User Balance (Mocked for now or sum of unpaid invoices)
-                    // Let's assume user doc has 'balance' or we calculate it.
-                    // For now, let's fetch active incidents and announcements.
-
-                    // Active Incidents
+                    // 1. Fetch Active Incidents
                     const incQuery = query(
                         collection(db, 'incidents'),
                         where('reporterId', '==', currentUser.uid),
@@ -48,12 +44,52 @@ export default function ResidentDashboard() {
                         limit(5)
                     );
                     const incSnap = await getDocs(incQuery);
-                    setStats(prev => ({ ...prev, activeIncidents: incSnap.size }));
-
+                    const activeIncidentsCount = incSnap.size;
                     const incidentsList = incSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                    // 2. Fetch User Balance (Sum of unpaid invoices)
+                    const invoicesQuery = query(
+                        collection(db, 'invoices'),
+                        where('userId', '==', currentUser.uid),
+                        where('status', '!=', 'paid')
+                    );
+                    // Note: 'status' != 'paid' might require an index or client-side filtering if composite index missing.
+                    // To be safe and avoid index creation requirement errors immediately, let's fetch by user and filter client side or use basic query.
+                    // simpler: fetch all user invoices and filter in memory since volume per user is low.
+
+                    const userInvoicesQuery = query(
+                        collection(db, 'invoices'),
+                        where('userId', '==', currentUser.uid)
+                    );
+                    const invoiceSnap = await getDocs(userInvoicesQuery);
+                    const unpaidBalance = invoiceSnap.docs
+                        .filter(doc => doc.data().status !== 'paid')
+                        .reduce((sum, doc) => sum + (Number(doc.data().amount) || 0), 0);
+
+                    // 3. Fetch Pending Reservations
+                    // Assuming 'reservations' collection exists. If not, this will just return empty.
+                    const resQuery = query(
+                        collection(db, 'reservations'),
+                        where('userId', '==', currentUser.uid),
+                        where('status', 'in', ['pending', 'confirmed', 'en_attente'])
+                    );
+                    // Wrap in try/catch in case collection doesn't exist or other error
+                    let pendingReservationsCount = 0;
+                    try {
+                        const resSnap = await getDocs(resQuery);
+                        pendingReservationsCount = resSnap.size;
+                    } catch (e) {
+                        console.log("Reservations collection might not exist yet", e);
+                    }
+
+                    setStats({
+                        balance: unpaidBalance,
+                        activeIncidents: activeIncidentsCount,
+                        pendingReservations: pendingReservationsCount
+                    });
                     setMyIncidents(incidentsList);
 
-                    // Latest Announcements
+                    // 4. Latest Announcements
                     const annQuery = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(1));
                     const annSnap = await getDocs(annQuery);
                     const anns = annSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -127,10 +163,10 @@ export default function ResidentDashboard() {
                                 {stats.balance.toLocaleString()} DA
                             </h3>
                         </div>
-                        <button className="mt-6 w-full py-2.5 bg-white text-primary-700 font-bold rounded-xl text-sm hover:bg-primary-50 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                        <Link href="/resident/finance" className="mt-6 w-full py-2.5 bg-white text-primary-700 font-bold rounded-xl text-sm hover:bg-primary-50 transition-colors flex items-center justify-center gap-2 shadow-sm">
                             <CreditCard className="w-4 h-4" />
                             Payer maintenant
-                        </button>
+                        </Link>
                     </div>
                 </motion.div>
 
@@ -159,7 +195,7 @@ export default function ResidentDashboard() {
                     </div>
                 </motion.div>
 
-                {/* Reservations (Mock for now) */}
+                {/* Reservations */}
                 <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group cursor-pointer relative overflow-hidden">
                     <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-blue-50 rounded-full group-hover:scale-110 transition-transform duration-500" />
                     <div className="relative z-10">
@@ -170,7 +206,7 @@ export default function ResidentDashboard() {
                         </div>
                         <p className="text-gray-500 text-sm font-medium">Réservations</p>
                         <h3 className="text-2xl font-bold text-gray-900 mt-1 mb-4">
-                            Nouvelle
+                            {stats.pendingReservations > 0 ? `${stats.pendingReservations} En attente` : 'Aucune'}
                         </h3>
                         <Link href="/resident/reservation" className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
                             Réserver un espace <ArrowRight className="w-4 h-4" />
@@ -261,9 +297,9 @@ export default function ResidentDashboard() {
                         <div className="relative z-10">
                             <h4 className="font-bold mb-2">Besoin d'aide ?</h4>
                             <p className="text-gray-300 text-sm mb-4">Contacter la gestion directement.</p>
-                            <button className="bg-white text-gray-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-100 transition-colors">
+                            <Link href="/resident/messages" className="bg-white text-gray-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-100 transition-colors inline-block">
                                 Contacter
-                            </button>
+                            </Link>
                         </div>
                         {/* Abstract decoration */}
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gray-800 rounded-full translate-x-10 -translate-y-10 opacity-50" />

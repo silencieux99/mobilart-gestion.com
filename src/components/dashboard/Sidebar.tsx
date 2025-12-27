@@ -2,7 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { auth } from '@/lib/firebase/config';
+import { signOut } from 'firebase/auth';
+import { toast } from 'sonner';
 import {
     LayoutDashboard,
     Users,
@@ -36,7 +39,19 @@ const navItems = [
 ];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+    const router = useRouter();
     const pathname = usePathname();
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            toast.success('Déconnexion réussie');
+            router.push('/');
+        } catch (error) {
+            console.error('Error logging out:', error);
+            toast.error('Erreur lors de la déconnexion');
+        }
+    };
 
     return (
         <>
@@ -122,7 +137,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                 {/* User Footer */}
                 <div className="p-4 border-t border-gray-100">
-                    <button className="flex items-center w-full px-4 py-3 text-sm font-medium text-red-600 rounded-xl hover:bg-red-50 transition-colors group">
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-3 text-sm font-medium text-red-600 rounded-xl hover:bg-red-50 transition-colors group"
+                    >
                         <LogOut className="mr-3 h-5 w-5 text-red-400 group-hover:text-red-600" />
                         Se déconnecter
                     </button>
