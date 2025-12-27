@@ -2,22 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-    Plus,
-    Search,
-    Filter,
     MoreHorizontal,
     Clock,
-    AlertCircle,
-    CheckCircle2,
-    Calendar,
     MapPin,
-    User,
     Loader2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { IncidentPriority, IncidentCategory } from '@/types';
-import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 const COLUMNS = [
@@ -27,7 +19,7 @@ const COLUMNS = [
 ];
 
 export default function IncidentsPage() {
-    const [activeTab, setActiveTab] = useState('board'); // 'board' or 'list'
+    const [activeTab, setActiveTab] = useState('board');
     const [incidents, setIncidents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -58,109 +50,102 @@ export default function IncidentsPage() {
     }
 
     return (
-        <div className="space-y-8 h-full flex flex-col">
-            {/* Header Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0">
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-display font-bold text-gray-900 tracking-tight">
-                        Incidents & Maintenance
-                    </h1>
-                    <p className="text-gray-500 mt-1">
-                        Suivi des demandes d'intervention et travaux.
-                    </p>
+                    <h1 className="text-2xl font-bold text-gray-900">Incidents</h1>
+                    <p className="text-sm text-gray-500">Suivi des signalements</p>
                 </div>
-                <div className="flex gap-2">
-                    <div className="bg-gray-100 p-1 rounded-xl flex">
-                        <button
-                            onClick={() => setActiveTab('board')}
-                            className={cn("px-4 py-1.5 rounded-lg text-sm font-medium transition-all", activeTab === 'board' ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700")}
-                        >
-                            Board
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('list')}
-                            className={cn("px-4 py-1.5 rounded-lg text-sm font-medium transition-all", activeTab === 'list' ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700")}
-                        >
-                            Liste
-                        </button>
-                    </div>
-                    <button className="flex items-center justify-center space-x-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-2 rounded-xl font-medium shadow-lg shadow-primary-500/25 transition-all">
-                        <Plus className="h-5 w-5" />
-                        <span>Signaler</span>
+                <div className="bg-gray-100 p-1 rounded-xl flex">
+                    <button
+                        onClick={() => setActiveTab('board')}
+                        className={cn("px-4 py-1.5 rounded-lg text-sm font-medium transition-all", activeTab === 'board' ? "bg-white shadow-sm text-gray-900" : "text-gray-500")}
+                    >
+                        Board
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('list')}
+                        className={cn("px-4 py-1.5 rounded-lg text-sm font-medium transition-all", activeTab === 'list' ? "bg-white shadow-sm text-gray-900" : "text-gray-500")}
+                    >
+                        Liste
                     </button>
                 </div>
             </div>
 
             {/* Board View */}
             {activeTab === 'board' && (
-                <div className="flex-1 overflow-x-auto pb-4">
-                    <div className="flex gap-6 min-w-[1000px] h-full">
+                <div className="overflow-x-auto pb-4">
+                    <div className="flex gap-4 min-w-[900px]">
                         {COLUMNS.map((col) => {
                             const colIncidents = incidents.filter(i => col.statuses.includes(i.status));
-
                             return (
-                                <div key={col.id} className="flex-1 flex flex-col min-w-[320px]">
-                                    {/* Column Header */}
-                                    <div className="flex items-center justify-between mb-4 px-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className={cn("h-3 w-3 rounded-full", col.color)} />
-                                            <h3 className="font-bold text-gray-700">{col.title}</h3>
-                                            <span className="bg-gray-200 text-gray-600 text-xs font-bold px-2 py-0.5 rounded-full">
-                                                {colIncidents.length}
-                                            </span>
-                                        </div>
-                                        <button className="text-gray-400 hover:text-gray-600">
-                                            <MoreHorizontal className="h-5 w-5" />
-                                        </button>
+                                <div key={col.id} className="flex-1 min-w-[280px]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className={cn("h-2.5 w-2.5 rounded-full", col.color)} />
+                                        <h3 className="font-semibold text-gray-700 text-sm">{col.title}</h3>
+                                        <span className="bg-gray-200 text-gray-600 text-xs font-medium px-1.5 py-0.5 rounded">
+                                            {colIncidents.length}
+                                        </span>
                                     </div>
-
-                                    {/* Cards Container */}
-                                    <div className="flex-1 bg-gray-50/50 rounded-2xl border border-gray-100 p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-250px)]">
+                                    <div className="bg-gray-50 rounded-xl border border-gray-100 p-3 space-y-3 min-h-[300px]">
                                         {colIncidents.map((incident) => (
                                             <IncidentCard key={incident.id} incident={incident} />
                                         ))}
                                         {colIncidents.length === 0 && (
-                                            <div className="text-center py-10 text-gray-400 text-sm italic">
+                                            <div className="text-center py-8 text-gray-400 text-xs">
                                                 Aucun incident
                                             </div>
                                         )}
-                                        <button className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-primary-300 hover:text-primary-600 hover:bg-primary-50 transition-all text-sm font-medium flex items-center justify-center gap-2">
-                                            <Plus className="h-4 w-4" />
-                                            Ajouter une carte
-                                        </button>
                                     </div>
                                 </div>
-                            )
+                            );
                         })}
                     </div>
                 </div>
             )}
 
-            {/* List View Placeholder (To be implemented later with real data table) */}
+            {/* List View */}
             {activeTab === 'list' && (
-                <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-500">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-gray-500">
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <table className="w-full text-sm">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Titre</th>
+                                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Lieu</th>
+                                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Priorité</th>
+                                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Statut</th>
+                                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {incidents.length === 0 ? (
                                 <tr>
-                                    <th className="px-4 py-2">Titre</th>
-                                    <th className="px-4 py-2">Localisation</th>
-                                    <th className="px-4 py-2">Priorité</th>
-                                    <th className="px-4 py-2">Date</th>
+                                    <td colSpan={5} className="py-8 text-center text-gray-400">Aucun incident</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {incidents.map(incident => (
-                                    <tr key={incident.id} className="border-b">
-                                        <td className="px-4 py-2">{incident.title}</td>
-                                        <td className="px-4 py-2">{incident.location}</td>
-                                        <td className="px-4 py-2">{incident.priority}</td>
-                                        <td className="px-4 py-2">{incident.createdAt?.toDate ? incident.createdAt.toDate().toLocaleDateString() : '-'}</td>
+                            ) : (
+                                incidents.map(incident => (
+                                    <tr key={incident.id} className="hover:bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900">{incident.title}</td>
+                                        <td className="px-4 py-3 text-gray-600">{incident.location || '-'}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={cn("px-2 py-0.5 text-xs font-medium rounded",
+                                                incident.priority === 'urgente' ? "bg-red-100 text-red-700" :
+                                                    incident.priority === 'haute' ? "bg-orange-100 text-orange-700" :
+                                                        "bg-gray-100 text-gray-600"
+                                            )}>
+                                                {incident.priority || 'normale'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-gray-600 capitalize">{incident.status}</td>
+                                        <td className="px-4 py-3 text-gray-500">
+                                            {incident.createdAt?.toDate ? incident.createdAt.toDate().toLocaleDateString() : '-'}
+                                        </td>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             )}
         </div>
@@ -169,55 +154,31 @@ export default function IncidentsPage() {
 
 function IncidentCard({ incident }: any) {
     const priorityColors: Record<string, string> = {
-        urgente: "text-red-700 bg-red-50 border-red-100",
-        haute: "text-orange-700 bg-orange-50 border-orange-100",
-        moyenne: "text-blue-700 bg-blue-50 border-blue-100",
-        basse: "text-gray-700 bg-gray-50 border-gray-100",
+        urgente: "text-red-700 bg-red-50",
+        haute: "text-orange-700 bg-orange-50",
+        moyenne: "text-blue-700 bg-blue-50",
+        basse: "text-gray-700 bg-gray-50",
     };
-
-    // Fallback for reportedBy if it's missing or just ID
-    const reporterName = incident.reporterName || incident.reportedBy || "Anonyme";
-    const dateDisplay = incident.createdAt?.toDate ? incident.createdAt.toDate().toLocaleDateString() : "Récemment";
 
     return (
         <motion.div
-            layoutId={incident.id}
             whileHover={{ y: -2 }}
-            className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+            className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer"
         >
-            <div className="flex items-start justify-between mb-3">
-                <span className={cn("text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-md border", priorityColors[incident.priority] || priorityColors['basse'])}>
-                    {incident.priority || 'basse'}
+            <div className="flex items-start justify-between mb-2">
+                <span className={cn("text-[10px] uppercase font-bold px-1.5 py-0.5 rounded", priorityColors[incident.priority] || "bg-gray-100")}>
+                    {incident.priority || 'normale'}
                 </span>
-                <span className="text-xs text-gray-400 flex items-center">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {dateDisplay}
+                <span className="text-[10px] text-gray-400 flex items-center">
+                    <Clock className="h-2.5 w-2.5 mr-1" />
+                    {incident.createdAt?.toDate ? incident.createdAt.toDate().toLocaleDateString() : '...'}
                 </span>
             </div>
-
-            <h4 className="font-bold text-gray-900 mb-1 leading-snug group-hover:text-primary-600 transition-colors">
-                {incident.title}
-            </h4>
-            <p className="text-sm text-gray-500 line-clamp-2 mb-3">
-                {incident.description}
-            </p>
-
-            {incident.images && incident.images.length > 0 && (
-                <div className="mb-3 rounded-lg overflow-hidden h-32 relative">
-                    <img src={incident.images[0]} alt="Incident" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" />
-                </div>
-            )}
-
-            <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-2">
-                <div className="flex items-center text-xs text-gray-500">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    {incident.location ? incident.location.split('-')[0] : 'Inconnu'}
-                </div>
-                <div className="flex -space-x-2">
-                    <div className="h-6 w-6 rounded-full bg-primary-100 border border-white flex items-center justify-center text-[10px] font-bold text-primary-700" title={reporterName}>
-                        {reporterName.charAt(0)}
-                    </div>
-                </div>
+            <h4 className="font-medium text-gray-900 text-sm mb-1">{incident.title}</h4>
+            <p className="text-xs text-gray-500 line-clamp-2 mb-2">{incident.description}</p>
+            <div className="flex items-center text-[10px] text-gray-400">
+                <MapPin className="h-2.5 w-2.5 mr-1" />
+                {incident.location || 'Non spécifié'}
             </div>
         </motion.div>
     );

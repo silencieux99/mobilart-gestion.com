@@ -6,9 +6,7 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     FileText,
-    Download,
     Filter,
-    Plus,
     CreditCard,
     PieChart as PieChartIcon,
     TrendingUp,
@@ -105,16 +103,6 @@ export default function FinancePage() {
                     <p className="text-gray-500 mt-1">
                         Suivi de la trésorerie, facturation et dépenses de la copropriété.
                     </p>
-                </div>
-                <div className="flex gap-2">
-                    <button className="flex items-center justify-center space-x-2 bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-xl font-medium hover:bg-gray-50 transition-all">
-                        <Download className="h-5 w-5" />
-                        <span className="hidden sm:inline">Exporter</span>
-                    </button>
-                    <button className="flex items-center justify-center space-x-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-primary-500/25 transition-all hover:-translate-y-0.5">
-                        <Plus className="h-5 w-5" />
-                        <span>Nouvelle Facture</span>
-                    </button>
                 </div>
             </div>
 

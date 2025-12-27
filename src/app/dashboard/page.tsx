@@ -108,7 +108,7 @@ export default function DashboardPage() {
                     residents: residentsCount,
                     activeIncidents: activeIncidentsCount,
                     occupancyRate,
-                    pendingTasks: 2 // Hardcoded for now until we have 'tasks' collection
+                    pendingTasks: 0
                 });
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
@@ -140,16 +140,11 @@ export default function DashboardPage() {
                         Bienvenue sur votre espace de gestion Mobilart.
                     </p>
                 </div>
-                <div className="flex gap-3">
-                    <button className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
-                        Télécharger le rapport
+                <Link href="/dashboard/communication">
+                    <button className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-500 shadow-lg shadow-primary-500/25 transition-all">
+                        + Nouvelle Annonce
                     </button>
-                    <Link href="/dashboard/community">
-                        <button className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-500 shadow-lg shadow-primary-500/25 transition-all">
-                            + Nouvelle Annonce
-                        </button>
-                    </Link>
-                </div>
+                </Link>
             </div>
 
             {/* Stats Grid */}
