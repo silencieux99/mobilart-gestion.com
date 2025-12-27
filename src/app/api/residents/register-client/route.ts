@@ -12,68 +12,13 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Firebase Admin SDK (optionnel)
-let adminAuth: any = null;
-let adminDb: any = null;
-
-try {
-    const { getAdminAuth, getAdminDb } = require('@/lib/firebase-admin/config');
-    adminAuth = getAdminAuth();
-    adminDb = getAdminDb();
-} catch (error) {
-    console.log('Firebase Admin not available, using client-side approach');
-}
-
 export async function POST(request: Request) {
     try {
-
         const body = await request.json();
-        const { firstName, lastName, email, phone, password, tempApartmentDetails } = body;
+        const { firstName, lastName, email, phone, tempApartmentDetails, userId } = body;
 
-        // Vérifier si l'email existe déjà
-        try {
-            await adminAuth.getUserByEmail(email);
-            return NextResponse.json(
-                { error: 'Un compte avec cet email existe déjà' },
-                { status: 400 }
-            );
-        } catch (error: any) {
-            // Si l'utilisateur n'existe pas, on continue (c'est ce qu'on veut)
-            if (error.code !== 'auth/user-not-found') {
-                throw error;
-            }
-        }
-
-        // Créer l'utilisateur dans Firebase Auth
-        const userRecord = await adminAuth.createUser({
-            email,
-            emailVerified: false,
-            password: password,
-            displayName: `${firstName} ${lastName}`,
-            disabled: true, // Désactivé jusqu'à validation admin
-        });
-
-        // Créer le document utilisateur dans Firestore avec statut "pending"
-        await adminDb.collection('users').doc(userRecord.uid).set({
-            firstName,
-            lastName,
-            email,
-            phone,
-            role: 'resident',
-            status: 'pending', // En attente de validation
-            tempApartmentDetails,
-            createdAt: new Date(),
-            isActive: false, // Inactif jusqu'à validation
-            notificationPreferences: {
-                email: true,
-                sms: false,
-                push: true
-            },
-            newsletterSubscribed: false,
-            registeredAt: new Date(),
-            validatedAt: null,
-            validatedBy: null,
-        });
+        // L'utilisateur a déjà été créé côté client avec Firebase Auth
+        // On enregistre juste les métadonnées supplémentaires
 
         // Envoyer un email de confirmation au résident
         const residentMailOptions = {
@@ -109,7 +54,7 @@ export async function POST(request: Request) {
         // Envoyer un email de notification à l'admin
         const adminMailOptions = {
             from: process.env.EMAIL_USER,
-            to: process.env.EMAIL_USER, // Email de l'admin
+            to: process.env.EMAIL_USER,
             subject: 'Nouvelle demande d\'inscription résident',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -121,6 +66,7 @@ export async function POST(request: Request) {
                         <p style="margin: 10px 0 0 0;"><strong>Email :</strong> ${email}</p>
                         <p style="margin: 5px 0 0 0;"><strong>Téléphone :</strong> ${phone}</p>
                         <p style="margin: 5px 0 0 0;"><strong>Appartement :</strong> ${tempApartmentDetails}</p>
+                        <p style="margin: 5px 0 0 0;"><strong>User ID :</strong> ${userId}</p>
                         <p style="margin: 5px 0 0 0;"><strong>Date :</strong> ${new Date().toLocaleString('fr-FR')}</p>
                     </div>
 
@@ -140,17 +86,15 @@ export async function POST(request: Request) {
             await transporter.sendMail(adminMailOptions);
         } catch (emailError) {
             console.error("Error sending email:", emailError);
-            // On continue même si l'email échoue
         }
 
         return NextResponse.json({ 
             success: true, 
             message: "Inscription réussie. Votre compte est en attente de validation.",
-            userId: userRecord.uid 
         });
 
     } catch (error: any) {
-        console.error('Error registering resident:', error);
+        console.error('Error in registration:', error);
         return NextResponse.json(
             { error: error.message || 'Internal Server Error' },
             { status: 500 }

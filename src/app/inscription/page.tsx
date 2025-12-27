@@ -19,6 +19,9 @@ import {
   Home
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { auth, db } from '@/lib/firebase/config';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function InscriptionPage() {
   const router = useRouter();
@@ -66,26 +69,63 @@ export default function InscriptionPage() {
     }
 
     try {
-      const response = await fetch('/api/residents/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          password: formData.password,
-          tempApartmentDetails: `Tour ${formData.tower} - Étage ${formData.floor} - Appt ${formData.apartmentNumber}`,
-        }),
+      // 1. Créer l'utilisateur avec Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      const user = userCredential.user;
+
+      // 2. Mettre à jour le profil
+      await updateProfile(user, {
+        displayName: `${formData.firstName} ${formData.lastName}`
       });
 
-      const data = await response.json();
+      // 3. Créer le document utilisateur dans Firestore avec statut "pending"
+      await setDoc(doc(db, 'users', user.uid), {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        role: 'resident',
+        status: 'pending',
+        tempApartmentDetails: `Tour ${formData.tower} - Étage ${formData.floor} - Appt ${formData.apartmentNumber}`,
+        createdAt: new Date(),
+        isActive: false,
+        notificationPreferences: {
+          email: true,
+          sms: false,
+          push: true
+        },
+        newsletterSubscribed: false,
+        registeredAt: new Date(),
+        validatedAt: null,
+        validatedBy: null,
+      });
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de l\'inscription');
+      // 4. Envoyer les emails via l'API
+      try {
+        await fetch('/api/residents/register-client', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
+            tempApartmentDetails: `Tour ${formData.tower} - Étage ${formData.floor} - Appt ${formData.apartmentNumber}`,
+            userId: user.uid,
+          }),
+        });
+      } catch (emailError) {
+        console.error('Email error:', emailError);
+        // Continue même si l'email échoue
       }
+
+      // 5. Déconnecter l'utilisateur (il doit attendre la validation)
+      await auth.signOut();
 
       setSuccess(true);
       toast.success('Inscription réussie ! Votre compte est en attente de validation.');
@@ -96,7 +136,17 @@ export default function InscriptionPage() {
 
     } catch (err: any) {
       console.error('Registration error:', err);
-      setError(err.message || 'Une erreur est survenue lors de l\'inscription');
+      let errorMessage = 'Une erreur est survenue lors de l\'inscription';
+      
+      if (err.code === 'auth/email-already-in-use') {
+        errorMessage = 'Un compte avec cet email existe déjà';
+      } else if (err.code === 'auth/weak-password') {
+        errorMessage = 'Le mot de passe est trop faible';
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = 'Email invalide';
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
