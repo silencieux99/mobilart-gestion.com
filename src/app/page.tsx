@@ -41,7 +41,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden font-sans">
+    <div className="fixed inset-0 w-full h-full overflow-hidden font-sans">
       {/* Immersive Background HD */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -49,67 +49,55 @@ export default function LoginPage() {
           alt="Tours Mobilart - Résidence Oran"
           fill
           priority
-          className="object-cover scale-105"
+          className="object-cover"
           quality={100}
           sizes="100vw"
         />
-        {/* Gradient Overlay moderne */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/60 via-black/50 to-slate-900/70" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(6,182,212,0.15),transparent_50%)]" />
+        {/* Gradient Overlay léger pour lisibilité */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
       </div>
 
-      {/* Content Container */}
-      <div className="relative z-10 flex min-h-screen items-end sm:items-center justify-center p-4 sm:p-6 lg:p-8 pb-8 sm:pb-6">
+      {/* Content Container - Fixé en bas sur mobile */}
+      <div className="absolute inset-x-0 bottom-0 z-10 p-4 sm:relative sm:inset-auto sm:flex sm:min-h-screen sm:items-center sm:justify-center sm:p-6 lg:p-8">
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           className="w-full max-w-md"
         >
-          {/* Glass Card Premium - Compact sur mobile */}
-          <div className="backdrop-blur-2xl bg-white/5 border border-white/20 shadow-2xl rounded-3xl overflow-hidden ring-1 ring-white/10">
-            <div className="p-6 sm:p-10">
-              {/* Header - Compact sur mobile */}
-              <div className="text-center mb-6 sm:mb-8">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.3 }}
-                  className="mx-auto h-12 w-12 sm:h-16 sm:w-16 rounded-xl bg-primary-500/90 flex items-center justify-center shadow-lg mb-4 sm:mb-6"
-                >
-                  <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                </motion.div>
-                <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-1 sm:mb-2 tracking-tight drop-shadow-lg">
+          {/* Glass Card Ultra Compact Mobile */}
+          <div className="backdrop-blur-xl bg-black/30 border border-white/10 shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden">
+            <div className="p-5 sm:p-10">
+              {/* Header Ultra Compact */}
+              <div className="text-center mb-4 sm:mb-8">
+                <h1 className="text-xl sm:text-3xl font-display font-bold text-white mb-1 sm:mb-2 tracking-tight">
                   Mobilart Gestion
                 </h1>
-                <p className="text-primary-100/90 text-base sm:text-lg font-medium">
+                <p className="text-white/70 text-sm sm:text-lg">
                   Espace Résident
-                </p>
-                <p className="text-white/60 text-xs sm:text-sm mt-1 sm:mt-2">
-                  Résidence Mobilart • Oran, Algérie
                 </p>
               </div>
 
-              {/* Error Message */}
+              {/* Error Message Compact */}
               <AnimatePresence>
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="mb-6 overflow-hidden"
+                    className="mb-3 sm:mb-6 overflow-hidden"
                   >
-                    <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 flex items-center space-x-3 text-red-200">
-                      <AlertCircle className="h-5 w-5 shrink-0" />
-                      <p className="text-sm font-medium">{error}</p>
+                    <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-center space-x-2 text-red-200">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <p className="text-xs sm:text-sm">{error}</p>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Login Form - Compact sur mobile */}
-              <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
-                <div className="space-y-3 sm:space-y-4">
+              {/* Login Form Ultra Compact */}
+              <form onSubmit={handleLogin} className="space-y-3 sm:space-y-6">
+                <div className="space-y-2.5 sm:space-y-4">
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <User className="h-5 w-5 text-white/50 group-focus-within:text-white transition-colors" />
@@ -120,7 +108,7 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       placeholder="Email"
-                      className="block w-full pl-12 pr-4 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all font-medium text-base"
+                      className="block w-full pl-12 pr-4 py-2.5 sm:py-4 bg-white/10 border border-white/20 rounded-lg sm:rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/20 transition-all text-base"
                       style={{ fontSize: '16px' }}
                     />
                   </div>
@@ -135,7 +123,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       placeholder="Mot de passe"
-                      className="block w-full pl-12 pr-12 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all font-medium text-base"
+                      className="block w-full pl-12 pr-12 py-2.5 sm:py-4 bg-white/10 border border-white/20 rounded-lg sm:rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/20 transition-all text-base"
                       style={{ fontSize: '16px' }}
                     />
                     <button
@@ -152,66 +140,46 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs sm:text-sm">
-                  <label className="flex items-center space-x-2 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-white/20 bg-white/10 text-primary-500 focus:ring-offset-0 focus:ring-primary-500/50 transition-colors"
-                    />
-                    <span className="text-white/70 group-hover:text-white transition-colors">Se souvenir</span>
-                  </label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-primary-300 hover:text-white transition-colors font-medium"
-                  >
-                    Mot de passe oublié ?
-                  </Link>
-                </div>
+                <Link
+                  href="/forgot-password"
+                  className="block text-center text-xs sm:text-sm text-primary-300 hover:text-white transition-colors"
+                >
+                  Mot de passe oublié ?
+                </Link>
 
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full flex items-center justify-center space-x-2 bg-primary-500 hover:bg-primary-400 text-white py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg shadow-primary-900/20 hover:shadow-primary-500/30 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full flex items-center justify-center space-x-2 bg-primary-500 hover:bg-primary-400 text-white py-2.5 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-lg shadow-lg transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
-                    <div className="h-6 w-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
-                    <>
-                      <span>Se connecter</span>
-                      <ArrowRight className="h-5 w-5" />
-                    </>
+                    <span>Se connecter</span>
                   )}
                 </button>
               </form>
             </div>
 
-            {/* Card Footer - Compact sur mobile */}
-            <div className="px-6 py-4 sm:px-8 sm:py-6 bg-white/5 border-t border-white/10 text-center">
-              <div className="space-y-1.5 sm:space-y-2">
-                <p className="text-white/60 text-xs sm:text-sm">
-                  Vous n'avez pas de compte ?{' '}
-                  <Link href="/inscription" className="text-white font-semibold hover:underline decoration-primary-400 decoration-2 underline-offset-4 transition-all">
-                    S'inscrire
-                  </Link>
-                </p>
-                <p className="text-white/60 text-xs sm:text-sm">
-                  Besoin d'aide ?{' '}
-                  <a href="mailto:contact@mobilart-gestion.com" className="text-primary-300 font-semibold hover:underline decoration-primary-400 decoration-2 underline-offset-4 transition-all">
-                    Contactez le syndic
-                  </a>
-                </p>
-              </div>
+            {/* Card Footer Ultra Compact */}
+            <div className="px-5 py-3 sm:px-8 sm:py-6 bg-white/5 border-t border-white/10 text-center">
+              <p className="text-white/60 text-[11px] sm:text-sm">
+                Pas de compte ? 
+                <Link href="/inscription" className="text-white font-medium hover:underline ml-1">
+                  S'inscrire
+                </Link>
+                <span className="mx-2">•</span>
+                <a href="mailto:contact@mobilart-gestion.com" className="text-primary-300 font-medium hover:underline">
+                  Contact
+                </a>
+              </p>
             </div>
           </div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="text-center text-white/40 text-[10px] sm:text-xs mt-4 sm:mt-8 px-4"
-          >
-            © 2025 Mobilart Gestion • Résidence Mobilart, Oran, Algérie • Tous droits réservés.
-          </motion.p>
+          {/* Copyright Mobile Only - Hidden on Desktop */}
+          <p className="text-center text-white/30 text-[10px] mt-3 sm:hidden">
+            © 2025 Mobilart Gestion
+          </p>
         </motion.div>
       </div>
     </div>
