@@ -41,6 +41,7 @@ export default function InscriptionPage() {
     tower: '',
     floor: '',
     apartmentNumber: '',
+    occupancyType: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -90,6 +91,7 @@ export default function InscriptionPage() {
         email: formData.email,
         phone: formData.phone,
         role: 'resident',
+        occupancyType: formData.occupancyType, // owner | tenant
         status: 'pending',
         tempApartmentDetails: `Tour ${formData.tower} - Étage ${formData.floor} - Appt ${formData.apartmentNumber}`,
         createdAt: new Date(),
@@ -129,7 +131,7 @@ export default function InscriptionPage() {
 
       setSuccess(true);
       toast.success('Inscription réussie ! Votre compte est en attente de validation.');
-      
+
       setTimeout(() => {
         router.push('/');
       }, 3000);
@@ -137,7 +139,7 @@ export default function InscriptionPage() {
     } catch (err: any) {
       console.error('Registration error:', err);
       let errorMessage = 'Une erreur est survenue lors de l\'inscription';
-      
+
       if (err.code === 'auth/email-already-in-use') {
         errorMessage = 'Un compte avec cet email existe déjà';
       } else if (err.code === 'auth/weak-password') {
@@ -145,7 +147,7 @@ export default function InscriptionPage() {
       } else if (err.code === 'auth/invalid-email') {
         errorMessage = 'Email invalide';
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -245,22 +247,22 @@ export default function InscriptionPage() {
                   </p>
                 </div>
 
-              {/* Error Message */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mb-6 overflow-hidden"
-                  >
-                    <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 flex items-center space-x-3 text-red-200">
-                      <AlertCircle className="h-5 w-5 shrink-0" />
-                      <p className="text-sm font-medium">{error}</p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                {/* Error Message */}
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mb-6 overflow-hidden"
+                    >
+                      <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 flex items-center space-x-3 text-red-200">
+                        <AlertCircle className="h-5 w-5 shrink-0" />
+                        <p className="text-sm font-medium">{error}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Form Minimal */}
                 <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
@@ -310,6 +312,23 @@ export default function InscriptionPage() {
                     className="w-full px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-sm sm:text-base"
                     style={{ fontSize: '16px' }}
                   />
+
+                  {/* Type d'occupation */}
+                  <div className="relative">
+                    <select
+                      name="occupancyType"
+                      value={formData.occupancyType}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 sm:py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:bg-white/10 transition-all text-sm sm:text-base appearance-none"
+                      style={{ fontSize: '16px' }}
+                    >
+                      <option value="" className="bg-slate-800 text-gray-400">Je suis...</option>
+                      <option value="owner" className="bg-slate-800">Propriétaire</option>
+                      <option value="tenant" className="bg-slate-800">Locataire</option>
+                    </select>
+                    <Building2 className="absolute right-3 top-2.5 h-5 w-5 text-white/40 pointer-events-none" />
+                  </div>
 
                   {/* Appartement - Ligne simple */}
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
