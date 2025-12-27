@@ -55,9 +55,19 @@
     @apply border-border;
   }
   
+  html {
+    /* Support pour les zones sûres iOS */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Empêche le scroll bounce sur iOS */
+    overscroll-behavior: none;
+    /* Hauteur minimale pour iOS */
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -74,6 +84,15 @@
   textarea,
   select {
     font-size: 16px !important;
+    /* Améliore le comportement sur iOS */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+  
+  /* Support pour le padding safe area */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
   }
 }
 

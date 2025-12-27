@@ -41,9 +41,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="fixed inset-0 w-full h-full overflow-hidden font-sans">
+    <div className="relative min-h-screen w-full overflow-hidden font-sans">
       {/* Immersive Background HD */}
-      <div className="absolute inset-0 z-0">
+      <div className="fixed inset-0 z-0">
         <Image
           src="/images/tours.png"
           alt="Tours Mobilart - Résidence Oran"
@@ -57,8 +57,8 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
       </div>
 
-      {/* Content Container - Fixé en bas sur mobile */}
-      <div className="absolute inset-x-0 bottom-0 z-10 p-4 sm:relative sm:inset-auto sm:flex sm:min-h-screen sm:items-center sm:justify-center sm:p-6 lg:p-8">
+      {/* Content Container - Responsive pour clavier mobile */}
+      <div className="relative z-10 min-h-screen flex items-end sm:items-center justify-center p-4 sm:p-6 lg:p-8 pb-safe">
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}

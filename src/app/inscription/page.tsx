@@ -158,9 +158,9 @@ export default function InscriptionPage() {
   }
 
   return (
-    <div className="fixed inset-0 w-full h-full overflow-hidden font-sans">
+    <div className="relative min-h-screen w-full overflow-hidden font-sans">
       {/* Background */}
-      <div className="absolute inset-0 z-0">
+      <div className="fixed inset-0 z-0">
         <Image
           src="/images/tours.png"
           alt="Tours Mobilart - Résidence Oran"
@@ -173,9 +173,9 @@ export default function InscriptionPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
       </div>
 
-      {/* Content - Scrollable on mobile */}
-      <div className="absolute inset-0 z-10 overflow-y-auto">
-        <div className="min-h-full flex items-end sm:items-center justify-center p-4 sm:p-6 lg:p-8 pb-0 sm:pb-6">
+      {/* Content - Scrollable with keyboard support */}
+      <div className="relative z-10 min-h-screen overflow-y-auto">
+        <div className="min-h-screen flex items-end sm:items-center justify-center p-4 sm:p-6 lg:p-8 pb-safe">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
