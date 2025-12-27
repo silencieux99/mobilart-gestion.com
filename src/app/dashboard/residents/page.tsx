@@ -13,7 +13,10 @@ import {
     Trash2,
     Edit2,
     Loader2,
-    MessageSquare
+    MessageSquare,
+    CheckCircle,
+    XCircle,
+    Clock
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -74,6 +77,50 @@ export default function ResidentsPage() {
         }
     };
 
+    const handleValidateResident = async (residentId: string) => {
+        try {
+            const response = await fetch('/api/residents/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ residentId, action: 'approve' })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Erreur lors de la validation');
+            }
+
+            toast.success('Résident validé avec succès');
+        } catch (error: any) {
+            console.error('Error validating resident:', error);
+            toast.error(error.message || 'Erreur lors de la validation');
+        }
+    };
+
+    const handleRejectResident = async (residentId: string) => {
+        if (!confirm('Êtes-vous sûr de vouloir rejeter cette demande ?')) return;
+
+        try {
+            const response = await fetch('/api/residents/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ residentId, action: 'reject' })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Erreur lors du rejet');
+            }
+
+            toast.success('Demande rejetée');
+        } catch (error: any) {
+            console.error('Error rejecting resident:', error);
+            toast.error(error.message || 'Erreur lors du rejet');
+        }
+    };
+
     const handleSendMessage = async (residentId: string) => {
         try {
             const currentUser = auth.currentUser;
@@ -122,18 +169,24 @@ export default function ResidentsPage() {
 
 
     const filteredResidents = residents.filter(resident => {
-        const matchesSearch =
+        const matchesSearch = 
             resident.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             resident.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             resident.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        // occupancyType is nested in tempApartmentDetails based on my modal implementation
-        const occupancyType = resident.tempApartmentDetails?.occupancyType || 'resident';
+        let matchesFilter = true;
+        if (filterType === 'pending') {
+            matchesFilter = resident.status === 'pending';
+        } else if (filterType === 'active') {
+            matchesFilter = resident.status !== 'pending' && resident.isActive !== false;
+        } else if (filterType !== 'all') {
+            matchesFilter = resident.tempApartmentDetails?.occupancyType === filterType;
+        }
 
-        const matchesType = filterType === 'all' || occupancyType === filterType;
-
-        return matchesSearch && matchesType;
+        return matchesSearch && matchesFilter;
     });
+
+    const pendingCount = residents.filter(r => r.status === 'pending').length;
 
     if (loading) {
         return (
@@ -194,13 +247,18 @@ export default function ResidentsPage() {
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 bg-orange-50 text-orange-600 rounded-xl">
-                            <UserIcon className="h-6 w-6" />
+                            <Clock className="h-6 w-6" />
                         </div>
+                        {pendingCount > 0 && (
+                            <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">
+                                {pendingCount} nouveau{pendingCount > 1 ? 'x' : ''}
+                            </span>
+                        )}
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-gray-500">Locataires</p>
+                        <p className="text-sm font-medium text-gray-500">En attente</p>
                         <h3 className="text-3xl font-bold text-gray-900">
-                            {residents.filter(r => r.tempApartmentDetails?.occupancyType === 'tenant').length}
+                            {pendingCount}
                         </h3>
                     </div>
                 </div>
@@ -225,6 +283,8 @@ export default function ResidentsPage() {
                         onChange={(e) => setFilterType(e.target.value)}
                     >
                         <option value="all">Tous les statuts</option>
+                        <option value="pending">En attente</option>
+                        <option value="active">Actifs</option>
                         <option value="owner">Propriétaires</option>
                         <option value="tenant">Locataires</option>
                     </select>
@@ -319,37 +379,60 @@ export default function ResidentsPage() {
                                             <td className="py-4 px-6 hidden sm:table-cell">
                                                 <span className={cn(
                                                     "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium",
+                                                    resident.status === 'pending' ? "bg-orange-100 text-orange-700" :
                                                     resident.isActive ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-700"
                                                 )}>
                                                     <span className={cn(
                                                         "h-1.5 w-1.5 rounded-full mr-1.5",
+                                                        resident.status === 'pending' ? "bg-orange-500" :
                                                         resident.isActive ? "bg-emerald-500" : "bg-gray-500"
                                                     )} />
-                                                    {resident.isActive ? 'Actif' : 'Inactif'}
+                                                    {resident.status === 'pending' ? 'En attente' : resident.isActive ? 'Actif' : 'Inactif'}
                                                 </span>
                                             </td>
                                             <td className="py-4 px-6 text-right">
-                                                <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={() => handleSendMessage(resident.id)}
-                                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                        title="Envoyer un message"
-                                                    >
-                                                        <MessageSquare className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleEdit(resident)}
-                                                        className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                                                    >
-                                                        <Edit2 className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(resident.id)}
-                                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
-                                                </div>
+                                                {resident.status === 'pending' ? (
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onClick={() => handleValidateResident(resident.id)}
+                                                            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                                                            title="Valider"
+                                                        >
+                                                            <CheckCircle className="h-4 w-4" />
+                                                            Valider
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleRejectResident(resident.id)}
+                                                            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                                                            title="Rejeter"
+                                                        >
+                                                            <XCircle className="h-4 w-4" />
+                                                            Rejeter
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => handleSendMessage(resident.id)}
+                                                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                            title="Envoyer un message"
+                                                        >
+                                                            <MessageSquare className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleEdit(resident)}
+                                                            className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                                                        >
+                                                            <Edit2 className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(resident.id)}
+                                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </td>
                                         </motion.tr>
                                     )

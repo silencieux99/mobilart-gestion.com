@@ -59,33 +59,33 @@ export default function LoginPage() {
       </div>
 
       {/* Content Container */}
-      <div className="relative z-10 flex min-h-screen items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="relative z-10 flex min-h-screen items-end sm:items-center justify-center p-4 sm:p-6 lg:p-8 pb-8 sm:pb-6">
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           className="w-full max-w-md"
         >
-          {/* Glass Card Premium */}
+          {/* Glass Card Premium - Compact sur mobile */}
           <div className="backdrop-blur-2xl bg-white/5 border border-white/20 shadow-2xl rounded-3xl overflow-hidden ring-1 ring-white/10">
-            <div className="p-8 sm:p-10">
-              {/* Header */}
-              <div className="text-center mb-8">
+            <div className="p-6 sm:p-10">
+              {/* Header - Compact sur mobile */}
+              <div className="text-center mb-6 sm:mb-8">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.3 }}
-                  className="mx-auto h-16 w-16 rounded-xl bg-primary-500/90 flex items-center justify-center shadow-lg mb-6"
+                  className="mx-auto h-12 w-12 sm:h-16 sm:w-16 rounded-xl bg-primary-500/90 flex items-center justify-center shadow-lg mb-4 sm:mb-6"
                 >
-                  <Building2 className="nav-icon h-8 w-8 text-white" />
+                  <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </motion.div>
-                <h1 className="text-3xl font-display font-bold text-white mb-2 tracking-tight drop-shadow-lg">
+                <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-1 sm:mb-2 tracking-tight drop-shadow-lg">
                   Mobilart Gestion
                 </h1>
-                <p className="text-primary-100/90 text-lg font-medium">
+                <p className="text-primary-100/90 text-base sm:text-lg font-medium">
                   Espace Résident
                 </p>
-                <p className="text-white/60 text-sm mt-2">
+                <p className="text-white/60 text-xs sm:text-sm mt-1 sm:mt-2">
                   Résidence Mobilart • Oran, Algérie
                 </p>
               </div>
@@ -107,9 +107,9 @@ export default function LoginPage() {
                 )}
               </AnimatePresence>
 
-              {/* Login Form */}
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div className="space-y-4">
+              {/* Login Form - Compact sur mobile */}
+              <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
+                <div className="space-y-3 sm:space-y-4">
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <User className="h-5 w-5 text-white/50 group-focus-within:text-white transition-colors" />
@@ -120,7 +120,7 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       placeholder="Email"
-                      className="block w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all font-medium text-base"
+                      className="block w-full pl-12 pr-4 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all font-medium text-base"
                       style={{ fontSize: '16px' }}
                     />
                   </div>
@@ -135,7 +135,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       placeholder="Mot de passe"
-                      className="block w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all font-medium text-base"
+                      className="block w-full pl-12 pr-12 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:bg-white/10 transition-all font-medium text-base"
                       style={{ fontSize: '16px' }}
                     />
                     <button
@@ -152,13 +152,13 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
                   <label className="flex items-center space-x-2 cursor-pointer group">
                     <input
                       type="checkbox"
-                      className="w-4 h-4 rounded border-white/20 bg-white/10 text-primary-500 focus:ring-offset-0 focus:ring-primary-500/50 transition-colors"
+                      className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-white/20 bg-white/10 text-primary-500 focus:ring-offset-0 focus:ring-primary-500/50 transition-colors"
                     />
-                    <span className="text-white/70 group-hover:text-white transition-colors">Se souvenir de moi</span>
+                    <span className="text-white/70 group-hover:text-white transition-colors">Se souvenir</span>
                   </label>
                   <Link
                     href="/forgot-password"
@@ -171,7 +171,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full flex items-center justify-center space-x-2 bg-primary-500 hover:bg-primary-400 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary-900/20 hover:shadow-primary-500/30 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full flex items-center justify-center space-x-2 bg-primary-500 hover:bg-primary-400 text-white py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg shadow-primary-900/20 hover:shadow-primary-500/30 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {isLoading ? (
                     <div className="h-6 w-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -185,14 +185,22 @@ export default function LoginPage() {
               </form>
             </div>
 
-            {/* Card Footer */}
-            <div className="px-8 py-6 bg-white/5 border-t border-white/10 text-center">
-              <p className="text-white/60 text-sm">
-                Vous n'avez pas de compte ?{' '}
-                <Link href="/contact" className="text-white font-semibold hover:underline decoration-primary-400 decoration-2 underline-offset-4 transition-all">
-                  Contactez le syndic
-                </Link>
-              </p>
+            {/* Card Footer - Compact sur mobile */}
+            <div className="px-6 py-4 sm:px-8 sm:py-6 bg-white/5 border-t border-white/10 text-center">
+              <div className="space-y-1.5 sm:space-y-2">
+                <p className="text-white/60 text-xs sm:text-sm">
+                  Vous n'avez pas de compte ?{' '}
+                  <Link href="/inscription" className="text-white font-semibold hover:underline decoration-primary-400 decoration-2 underline-offset-4 transition-all">
+                    S'inscrire
+                  </Link>
+                </p>
+                <p className="text-white/60 text-xs sm:text-sm">
+                  Besoin d'aide ?{' '}
+                  <a href="mailto:contact@mobilart-gestion.com" className="text-primary-300 font-semibold hover:underline decoration-primary-400 decoration-2 underline-offset-4 transition-all">
+                    Contactez le syndic
+                  </a>
+                </p>
+              </div>
             </div>
           </div>
 
@@ -200,7 +208,7 @@ export default function LoginPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="text-center text-white/40 text-xs mt-8"
+            className="text-center text-white/40 text-[10px] sm:text-xs mt-4 sm:mt-8 px-4"
           >
             © 2025 Mobilart Gestion • Résidence Mobilart, Oran, Algérie • Tous droits réservés.
           </motion.p>
