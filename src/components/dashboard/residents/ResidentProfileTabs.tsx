@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     User,
     Building,
@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 interface ResidentProfileTabsProps {
     resident: any;
@@ -38,6 +40,59 @@ export default function ResidentProfileTabs({
     setEditedData
 }: ResidentProfileTabsProps) {
     const [activeTab, setActiveTab] = useState('general');
+    const [payments, setPayments] = useState<any[]>([]);
+    const [incidents, setIncidents] = useState<any[]>([]);
+    const [activities, setActivities] = useState<any[]>([]);
+    const [loadingData, setLoadingData] = useState(true);
+
+    useEffect(() => {
+        if (!resident?.id) return;
+
+        const fetchData = async () => {
+            try {
+                // Fetch Invoices (Payments)
+                const qInv = query(collection(db, 'invoices'), where('userId', '==', resident.id), orderBy('createdAt', 'desc'));
+                const snapInv = await getDocs(qInv);
+                const loadedPayments = snapInv.docs.map(d => {
+                    const data = d.data();
+                    return {
+                        id: d.id,
+                        ...data,
+                        date: data.createdAt || data.date, // Handle variations
+                        amount: Number(data.amount || 0),
+                        type: data.type || 'Paiement',
+                        status: data.status || 'pending'
+                    };
+                });
+                setPayments(loadedPayments);
+
+                // Fetch Incidents
+                const qInc = query(collection(db, 'incidents'), where('reporterId', '==', resident.id), orderBy('createdAt', 'desc'));
+                const snapInc = await getDocs(qInc);
+                const loadedIncidents = snapInc.docs.map(d => {
+                    const data = d.data();
+                    return {
+                        id: d.id,
+                        ...data,
+                        date: data.createdAt || new Date(),
+                        title: data.type || 'Incident', // Fallback to type if title missing
+                        priority: data.priority || 'medium',
+                        status: data.status || 'new'
+                    };
+                });
+                setIncidents(loadedIncidents);
+
+                // Activities - Empty for now as requested to remove fake data
+                // Could be populated from logs collection later
+                setActivities([]);
+            } catch (e) {
+                console.error("Error loading resident sub-data", e);
+            } finally {
+                setLoadingData(false);
+            }
+        };
+        fetchData();
+    }, [resident?.id]);
 
     // Safe Date Helper
     const formatSafeDate = (date: any, formatStr: string = 'dd MMMM yyyy') => {
@@ -52,28 +107,22 @@ export default function ResidentProfileTabs({
         }
     };
 
-    // Mock data pour démonstration
-    const payments = [
-        { id: '1', amount: 1500, date: new Date(), status: 'paid', type: 'Charges mensuelles', method: 'Virement' },
-        { id: '2', amount: 1500, date: new Date(2024, 10, 1), status: 'paid', type: 'Charges mensuelles', method: 'CB' },
-        { id: '3', amount: 1500, date: new Date(2024, 9, 1), status: 'late', type: 'Charges mensuelles', method: 'Chèque' },
-    ];
-
-    const incidents = [
-        { id: '1', title: 'Fuite d\'eau', status: 'resolved', priority: 'high', date: new Date(2024, 11, 15) },
-        { id: '2', title: 'Problème ascenseur', status: 'in_progress', priority: 'medium', date: new Date(2024, 11, 20) },
-    ];
-
-    const activities = [
-        { id: '1', type: 'login', description: 'Connexion', date: new Date() },
-        { id: '2', type: 'document', description: 'Document téléchargé', date: new Date(2024, 11, 25) },
-        { id: '3', type: 'payment', description: 'Paiement effectué', date: new Date(2024, 11, 1) },
-    ];
+    // Safe Apartment Details Helper
+    const formatApartmentDetails = (details: any) => {
+        if (!details) return "Non assigné";
+        if (typeof details === 'string') return details;
+        if (typeof details === 'object') {
+            const { tower, floor, number, apartmentNumber } = details;
+            const num = number || apartmentNumber || '?';
+            return `Tour ${tower || '?'} - Étage ${floor || '?'} - Appt ${num}`;
+        }
+        return "Format inconnu";
+    };
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            {/* Tabs Navigation - Scrollable on mobile */}
-            <div className="border-b border-gray-100 overflow-x-auto scrollbar-hide">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden w-full max-w-full">
+            {/* Tabs Navigation - Scrollable on mobile & Sticky */}
+            <div className="border-b border-gray-100 overflow-x-auto scrollbar-hide sticky top-0 z-20 bg-white backdrop-blur-xl bg-white/95 w-full">
                 <nav className="flex px-4 sm:px-6 min-w-max" aria-label="Tabs">
                     {[
                         { id: 'general', label: 'Général', icon: User },
@@ -87,8 +136,8 @@ export default function ResidentProfileTabs({
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`group flex items-center gap-2 py-4 px-4 border-b-2 font-medium text-sm transition-all whitespace-nowrap ${activeTab === tab.id
-                                    ? 'border-primary-500 text-primary-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
+                                ? 'border-primary-500 text-primary-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
                                 }`}
                         >
                             <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-500'}`} />
@@ -115,7 +164,7 @@ export default function ResidentProfileTabs({
                                             type="text"
                                             value={editedData.firstName || ''}
                                             onChange={(e) => setEditedData({ ...editedData, firstName: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white text-base sm:text-sm"
                                         />
                                     ) : (
                                         <p className="text-gray-900 font-medium">{resident.firstName}</p>
@@ -128,7 +177,7 @@ export default function ResidentProfileTabs({
                                             type="text"
                                             value={editedData.lastName || ''}
                                             onChange={(e) => setEditedData({ ...editedData, lastName: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white text-base sm:text-sm"
                                         />
                                     ) : (
                                         <p className="text-gray-900 font-medium">{resident.lastName}</p>
@@ -150,7 +199,7 @@ export default function ResidentProfileTabs({
                                             type="tel"
                                             value={editedData.phone || ''}
                                             onChange={(e) => setEditedData({ ...editedData, phone: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white text-base sm:text-sm"
                                         />
                                     ) : (
                                         <p className="text-gray-900 font-medium">{resident.phone || 'Non renseigné'}</p>
@@ -210,55 +259,158 @@ export default function ResidentProfileTabs({
 
                 {/* Apartment Tab */}
                 {activeTab === 'apartment' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                        <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                    <div className="grid grid-cols-1 gap-6">
+                        <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-100">
                             <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                                 <Building className="h-5 w-5 text-primary-600" />
                                 Informations logement
                             </h3>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
-                                    <span className="text-gray-500 text-sm">Appartement</span>
-                                    <span className="font-bold text-gray-900 text-lg">
-                                        {resident.tempApartmentDetails || 'Non assigné'}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                                    <span className="text-gray-600">Type</span>
-                                    <span className="font-medium text-gray-900">
-                                        {resident.apartment?.occupancyType === 'owner' ? 'Propriétaire' : 'Locataire'}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                                    <span className="text-gray-600">Surface</span>
-                                    <span className="font-medium text-gray-900">85 m²</span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                                    <span className="text-gray-600">Pièces</span>
-                                    <span className="font-medium text-gray-900">3 pièces</span>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
-                            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                <Car className="h-5 w-5 text-primary-600" />
-                                Équipements
-                            </h3>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                                    <span className="text-gray-600">Parking</span>
-                                    <span className="font-medium text-gray-900">Place n°42</span>
+                            {editing ? (
+                                <div className="space-y-6">
+                                    {/* Localisation */}
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <h4 className="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wider">Localisation</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">Tour</label>
+                                                <select
+                                                    value={typeof editedData.tempApartmentDetails === 'object' ? editedData.tempApartmentDetails?.tower : ''}
+                                                    onChange={(e) => {
+                                                        const current = typeof editedData.tempApartmentDetails === 'object' ? editedData.tempApartmentDetails : {};
+                                                        setEditedData({ ...editedData, tempApartmentDetails: { ...current, tower: e.target.value } });
+                                                    }}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base sm:text-sm bg-white focus:ring-2 focus:ring-primary-500"
+                                                >
+                                                    <option value="">Choisir...</option>
+                                                    <option value="A">Tour A</option>
+                                                    <option value="B">Tour B</option>
+                                                    <option value="C">Tour C</option>
+                                                    <option value="D">Tour D</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">Étage</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Ex: 12"
+                                                    value={typeof editedData.tempApartmentDetails === 'object' ? editedData.tempApartmentDetails?.floor : ''}
+                                                    onChange={(e) => {
+                                                        const current = typeof editedData.tempApartmentDetails === 'object' ? editedData.tempApartmentDetails : {};
+                                                        setEditedData({ ...editedData, tempApartmentDetails: { ...current, floor: e.target.value } });
+                                                    }}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base sm:text-sm bg-white focus:ring-2 focus:ring-primary-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">Numéro Porte</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Ex: 04"
+                                                    value={typeof editedData.tempApartmentDetails === 'object' ? (editedData.tempApartmentDetails?.number || editedData.tempApartmentDetails?.apartmentNumber) : ''}
+                                                    onChange={(e) => {
+                                                        const current = typeof editedData.tempApartmentDetails === 'object' ? editedData.tempApartmentDetails : {};
+                                                        setEditedData({ ...editedData, tempApartmentDetails: { ...current, number: e.target.value } });
+                                                    }}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base sm:text-sm bg-white focus:ring-2 focus:ring-primary-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Annexes */}
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <h4 className="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wider">Annexes & Stationnement</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">Place de Parking</label>
+                                                <div className="relative">
+                                                    <Car className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Ex: P-102"
+                                                        value={typeof editedData.tempApartmentDetails === 'object' ? editedData.tempApartmentDetails?.parking : ''}
+                                                        onChange={(e) => {
+                                                            const current = typeof editedData.tempApartmentDetails === 'object' ? editedData.tempApartmentDetails : {};
+                                                            setEditedData({ ...editedData, tempApartmentDetails: { ...current, parking: e.target.value } });
+                                                        }}
+                                                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-base sm:text-sm bg-white focus:ring-2 focus:ring-primary-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">Cave / Box</label>
+                                                <div className="relative">
+                                                    <Building className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Ex: C-54"
+                                                        value={typeof editedData.tempApartmentDetails === 'object' ? editedData.tempApartmentDetails?.cellar : ''}
+                                                        onChange={(e) => {
+                                                            const current = typeof editedData.tempApartmentDetails === 'object' ? editedData.tempApartmentDetails : {};
+                                                            setEditedData({ ...editedData, tempApartmentDetails: { ...current, cellar: e.target.value } });
+                                                        }}
+                                                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-base sm:text-sm bg-white focus:ring-2 focus:ring-primary-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Type */}
+                                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                                        <h4 className="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wider">Statut d'occupation</h4>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">Type</label>
+                                            <select
+                                                value={editedData.occupancyType || ''}
+                                                onChange={(e) => setEditedData({ ...editedData, occupancyType: e.target.value })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base sm:text-sm bg-white focus:ring-2 focus:ring-primary-500"
+                                            >
+                                                <option value="">Sélectionner...</option>
+                                                <option value="owner">Propriétaire</option>
+                                                <option value="tenant">Locataire</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                                    <span className="text-gray-600">Cave</span>
-                                    <span className="font-medium text-gray-900">Cave n°12</span>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm border border-gray-100">
+                                        <span className="text-gray-500 text-sm">Appartement</span>
+                                        <span className="font-bold text-gray-900 text-lg">
+                                            {formatApartmentDetails(resident.tempApartmentDetails)}
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="p-3 bg-white rounded-lg border border-gray-100">
+                                            <span className="block text-gray-500 text-xs uppercase tracking-wider mb-1">Parking</span>
+                                            <div className="flex items-center gap-2 font-medium text-gray-900">
+                                                <Car className="h-4 w-4 text-primary-500" />
+                                                {(typeof resident.tempApartmentDetails === 'object' && resident.tempApartmentDetails?.parking) || 'Non assigné'}
+                                            </div>
+                                        </div>
+                                        <div className="p-3 bg-white rounded-lg border border-gray-100">
+                                            <span className="block text-gray-500 text-xs uppercase tracking-wider mb-1">Cave</span>
+                                            <div className="flex items-center gap-2 font-medium text-gray-900">
+                                                <Building className="h-4 w-4 text-primary-500" />
+                                                {(typeof resident.tempApartmentDetails === 'object' && resident.tempApartmentDetails?.cellar) || 'Non assignée'}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center border-b border-gray-200 py-3">
+                                        <span className="text-gray-600">Type d'occupation</span>
+                                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${(resident.occupancyType === 'owner')
+                                            ? 'bg-purple-50 text-purple-700 border border-purple-100'
+                                            : 'bg-blue-50 text-blue-700 border border-blue-100'
+                                            }`}>
+                                            {(resident.occupancyType === 'owner') ? 'Propriétaire' : 'Locataire'}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                                    <span className="text-gray-600">Balcon</span>
-                                    <span className="font-medium text-gray-900">Oui (8m²)</span>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -314,31 +466,39 @@ export default function ResidentProfileTabs({
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200">
-                                        {payments.map((payment) => (
-                                            <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                                                    {formatSafeDate(payment.date, 'dd/MM/yyyy')}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-600">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                                                        {payment.type}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm font-bold text-gray-900">
-                                                    {payment.amount.toFixed(2)} DA
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${payment.status === 'paid' ? 'bg-emerald-100 text-emerald-800' :
+                                        {payments.length > 0 ? (
+                                            payments.map((payment) => (
+                                                <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                                                        {formatSafeDate(payment.date, 'dd/MM/yyyy')}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                                                            {payment.type}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm font-bold text-gray-900">
+                                                        {payment.amount.toFixed(2)} DA
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${payment.status === 'paid' ? 'bg-emerald-100 text-emerald-800' :
                                                             payment.status === 'pending' ? 'bg-orange-100 text-orange-800' :
                                                                 'bg-red-100 text-red-800'
-                                                        }`}>
-                                                        {payment.status === 'paid' ? 'Payé' :
-                                                            payment.status === 'pending' ? 'En attente' : 'En retard'}
-                                                    </span>
+                                                            }`}>
+                                                            {payment.status === 'paid' ? 'Payé' :
+                                                                payment.status === 'pending' ? 'En attente' : 'En retard'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                                                    Aucun paiement enregistré
                                                 </td>
                                             </tr>
-                                        ))}
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -349,41 +509,50 @@ export default function ResidentProfileTabs({
                 {/* Incidents Tab */}
                 {activeTab === 'incidents' && (
                     <div className="space-y-4">
-                        {incidents.map((incident) => (
-                            <div key={incident.id} className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md transition-shadow">
-                                <div className="flex items-start gap-4">
-                                    <div className={`p-3 rounded-xl ${incident.priority === 'high' ? 'bg-red-50 text-red-600' :
+                        {incidents.length > 0 ? (
+                            incidents.map((incident) => (
+                                <div key={incident.id} className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md transition-shadow">
+                                    <div className="flex items-start gap-4">
+                                        <div className={`p-3 rounded-xl ${incident.priority === 'high' ? 'bg-red-50 text-red-600' :
                                             incident.priority === 'medium' ? 'bg-orange-50 text-orange-600' :
                                                 'bg-blue-50 text-blue-600'
-                                        }`}>
-                                        <AlertCircle className="h-6 w-6" />
+                                            }`}>
+                                            <AlertCircle className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-900 text-lg">{incident.title}</h4>
+                                            <p className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                                                <Calendar className="h-4 w-4" />
+                                                {formatSafeDate(incident.date)}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 className="font-bold text-gray-900 text-lg">{incident.title}</h4>
-                                        <p className="text-sm text-gray-500 flex items-center gap-2 mt-1">
-                                            <Calendar className="h-4 w-4" />
-                                            {formatSafeDate(incident.date)}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 pl-14 sm:pl-0">
-                                    <span className={`px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${incident.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                    <div className="flex items-center gap-3 pl-14 sm:pl-0">
+                                        <span className={`px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${incident.priority === 'high' ? 'bg-red-100 text-red-700' :
                                             incident.priority === 'medium' ? 'bg-orange-100 text-orange-700' :
                                                 'bg-gray-100 text-gray-700'
-                                        }`}>
-                                        {incident.priority === 'high' ? 'Urgent' :
-                                            incident.priority === 'medium' ? 'Moyen' : 'Faible'}
-                                    </span>
-                                    <span className={`px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${incident.status === 'resolved' ? 'bg-emerald-100 text-emerald-700' :
+                                            }`}>
+                                            {incident.priority === 'high' ? 'Urgent' :
+                                                incident.priority === 'medium' ? 'Moyen' : 'Faible'}
+                                        </span>
+                                        <span className={`px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${incident.status === 'resolved' ? 'bg-emerald-100 text-emerald-700' :
                                             incident.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
                                                 'bg-gray-100 text-gray-700'
-                                        }`}>
-                                        {incident.status === 'resolved' ? 'Résolu' :
-                                            incident.status === 'in_progress' ? 'En cours' : 'Nouveau'}
-                                    </span>
+                                            }`}>
+                                            {incident.status === 'resolved' ? 'Résolu' :
+                                                incident.status === 'in_progress' ? 'En cours' : 'Nouveau'}
+                                        </span>
+                                    </div>
                                 </div>
+                            ))
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                                <div className="p-3 bg-white rounded-full mb-3 shadow-sm">
+                                    <AlertCircle className="h-6 w-6 text-gray-300" />
+                                </div>
+                                <p className="text-gray-500 font-medium">Aucun incident signalé</p>
                             </div>
-                        ))}
+                        )}
                     </div>
                 )}
 
@@ -401,24 +570,33 @@ export default function ResidentProfileTabs({
                 {/* Activity Tab */}
                 {activeTab === 'activity' && (
                     <div className="space-y-4">
-                        {activities.map((activity) => (
-                            <div key={activity.id} className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
-                                <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${activity.type === 'login' ? 'bg-blue-100 text-blue-600' :
+                        {activities.length > 0 ? (
+                            activities.map((activity) => (
+                                <div key={activity.id} className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${activity.type === 'login' ? 'bg-blue-100 text-blue-600' :
                                         activity.type === 'payment' ? 'bg-emerald-100 text-emerald-600' :
                                             'bg-gray-100 text-gray-600'
-                                    }`}>
-                                    {activity.type === 'login' ? <User className="h-5 w-5" /> :
-                                        activity.type === 'payment' ? <DollarSign className="h-5 w-5" /> :
-                                            <FileText className="h-5 w-5" />}
+                                        }`}>
+                                        {activity.type === 'login' ? <User className="h-5 w-5" /> :
+                                            activity.type === 'payment' ? <DollarSign className="h-5 w-5" /> :
+                                                <FileText className="h-5 w-5" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-gray-900">{activity.description}</p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            {formatSafeDate(activity.date, 'dd/MM/yyyy à HH:mm')}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-gray-900">{activity.description}</p>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        {formatSafeDate(activity.date, 'dd/MM/yyyy à HH:mm')}
-                                    </p>
+                            ))
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                                <div className="p-3 bg-white rounded-full mb-3 shadow-sm">
+                                    <Activity className="h-6 w-6 text-gray-300" />
                                 </div>
+                                <p className="text-gray-500 font-medium">Aucune activité récente</p>
                             </div>
-                        ))}
+                        )}
                     </div>
                 )}
             </div>

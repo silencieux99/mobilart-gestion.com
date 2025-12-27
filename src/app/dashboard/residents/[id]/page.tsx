@@ -156,10 +156,10 @@ export default function ResidentProfilePage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <button
                         onClick={() => router.push('/dashboard/residents')}
-                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors self-start"
+                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors self-start p-2 -ml-2 sm:ml-0"
                     >
                         <ArrowLeft className="h-5 w-5" />
-                        Retour
+                        <span className="font-medium">Retour</span>
                     </button>
                     <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                         {!editing ? (
@@ -174,8 +174,8 @@ export default function ResidentProfilePage() {
                                 <button
                                     onClick={handleToggleStatus}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors text-sm font-medium ${resident.isActive
-                                            ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100'
-                                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100'
+                                        ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100'
+                                        : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100'
                                         }`}
                                 >
                                     {resident.isActive ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}

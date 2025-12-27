@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Home, User, Key, Shield, Building2 } from 'lucide-react';
+import { Home, User, Key, Shield, Building2, Car, Package } from 'lucide-react';
 import { auth, db } from '@/lib/firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -39,10 +39,26 @@ export default function ResidentApartmentPage() {
         );
     }
 
-    // Default or Fallback data
-    const apartmentDetails = userData?.tempApartmentDetails || "Non assigné";
-    const occupancyType = userData?.occupancyType === 'owner' ? 'Propriétaire' : 'Locataire';
-    const isOwner = userData?.occupancyType === 'owner';
+    // Helper to safely format apartment details
+    const formatApartmentDetails = (details: any) => {
+        if (!details) return "Non assigné";
+        if (typeof details === 'string') return details;
+        if (typeof details === 'object') {
+            const { tower, floor, number, apartmentNumber } = details;
+            const num = number || apartmentNumber || '?';
+            return `Tour ${tower || '?'} - Étage ${floor || '?'} - Appt ${num}`;
+        }
+        return "Format inconnu";
+    };
+
+    const apartmentDetails = formatApartmentDetails(userData?.tempApartmentDetails);
+
+    // Handle occupancy type from root or nested object
+    const rawOccupancyType = userData?.occupancyType || (typeof userData?.tempApartmentDetails === 'object' ? userData?.tempApartmentDetails?.occupancyType : null);
+    const occupancyType = rawOccupancyType === 'owner' ? 'Propriétaire' :
+        rawOccupancyType === 'tenant' ? 'Locataire' : 'Résident';
+
+    const isOwner = rawOccupancyType === 'owner';
 
     // Parse temp details if possible "Tour X - Floor Y - Appt Z"
     // This is a simple display logic, robust parsing would be better but this suffices for now
@@ -91,6 +107,29 @@ export default function ResidentApartmentPage() {
                         </div>
                     </div>
                 </div>
+
+                {userData?.tempApartmentDetails && typeof userData.tempApartmentDetails === 'object' && (userData.tempApartmentDetails.parking || userData.tempApartmentDetails.cellar) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-gray-100">
+                        {userData.tempApartmentDetails.parking && (
+                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                <div className="flex items-center gap-3">
+                                    <Car className="h-5 w-5 text-gray-400" />
+                                    <span className="text-gray-500 text-sm">Parking</span>
+                                </div>
+                                <span className="font-semibold text-gray-900">{userData.tempApartmentDetails.parking}</span>
+                            </div>
+                        )}
+                        {userData.tempApartmentDetails.cellar && (
+                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                <div className="flex items-center gap-3">
+                                    <Package className="h-5 w-5 text-gray-400" />
+                                    <span className="text-gray-500 text-sm">Cave / Box</span>
+                                </div>
+                                <span className="font-semibold text-gray-900">{userData.tempApartmentDetails.cellar}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
