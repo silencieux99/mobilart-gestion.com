@@ -10,6 +10,14 @@ const nextConfig = {
     ],
   },
   transpilePackages: ['undici', 'firebase', '@firebase/auth', '@firebase/storage', '@firebase/app'],
+  webpack: (config, { isServer }) => {
+    // Exclure le dossier firebase/functions du build
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: ['**/node_modules', '**/firebase/functions/**'],
+    }
+    return config
+  },
 }
 
 module.exports = nextConfig

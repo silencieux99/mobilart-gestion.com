@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebase-admin/config';
+import { getAdminAuth, getAdminDb } from '@/lib/firebase-admin/config';
 import nodemailer from 'nodemailer';
 
 // Configure Nodemailer transporter
@@ -26,6 +26,16 @@ function generatePassword(length = 10) {
 
 export async function POST(request: Request) {
     try {
+        const adminAuth = getAdminAuth();
+        const adminDb = getAdminDb();
+
+        if (!adminAuth || !adminDb) {
+            return NextResponse.json(
+                { error: 'Firebase Admin not initialized' },
+                { status: 500 }
+            );
+        }
+
         const body = await request.json();
         const { firstName, lastName, email, phone, role, tempApartmentDetails } = body;
 
