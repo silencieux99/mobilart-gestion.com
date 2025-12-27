@@ -27,7 +27,7 @@ try {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { firstName, lastName, email, phone, password, tempApartmentDetails } = body;
+        const { firstName, lastName, email, phone, password, tempApartmentDetails, occupancyType } = body;
 
         // Si Firebase Admin n'est pas disponible, rediriger vers la méthode client
         if (!adminAuth || !adminDb) {
@@ -70,6 +70,7 @@ export async function POST(request: Request) {
             email,
             phone,
             role: 'resident',
+            occupancyType: occupancyType || 'tenant',
             status: 'active',
             tempApartmentDetails,
             createdAt: new Date(),

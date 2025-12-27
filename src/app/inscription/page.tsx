@@ -84,16 +84,26 @@ export default function InscriptionPage() {
         displayName: `${formData.firstName} ${formData.lastName}`
       });
 
-      // 3. Créer le document utilisateur dans Firestore avec statut "pending"
+      // 3. Créer le document utilisateur dans Firestore
+      const apartmentData = {
+        tower: formData.tower,
+        floor: formData.floor,
+        number: formData.apartmentNumber,
+        formatted: `Tour ${formData.tower} - Étage ${formData.floor} - Appt ${formData.apartmentNumber}`
+      };
+
       await setDoc(doc(db, 'users', user.uid), {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
         role: 'resident',
-        occupancyType: formData.occupancyType, // owner | tenant
+        occupancyType: formData.occupancyType || 'tenant',
         status: 'active',
-        tempApartmentDetails: `Tour ${formData.tower} - Étage ${formData.floor} - Appt ${formData.apartmentNumber}`,
+        tempApartmentDetails: apartmentData,
+        tower: formData.tower,
+        floor: formData.floor,
+        apartmentNumber: formData.apartmentNumber,
         createdAt: new Date(),
         isActive: true,
         notificationPreferences: {
